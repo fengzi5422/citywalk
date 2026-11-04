@@ -9,13 +9,16 @@ type Props = {
   basemap: BaseMapSetting
   auth: Auth | null
   syncing: boolean
+  historyCount: number
   onLogin: () => void
   onLogout: () => void
+  onHistory: () => void
+  onRefresh: () => void
   onBasemapChange: (next: BaseMapSetting) => void
   onClear: () => void
 }
 
-export default function Me({ trips, basemap, auth, syncing, onLogin, onLogout, onBasemapChange, onClear }: Props) {
+export default function Me({ trips, basemap, auth, syncing, historyCount, onLogin, onLogout, onHistory, onRefresh, onBasemapChange, onClear }: Props) {
   const [tk, setTk] = useState(basemap.tk)
   const [showTk, setShowTk] = useState(false)
   const [tip, setTip] = useState('')
@@ -75,6 +78,24 @@ export default function Me({ trips, basemap, auth, syncing, onLogin, onLogout, o
           <div><b>{trips.filter((t) => t.status === 'active').length}</b><span>进行中</span></div>
           <div><b>1</b><span>座城市</span></div>
         </div>
+      </div>
+
+      <div className="pad" style={{ marginTop: 22 }}>
+        <p className="block-title" style={{ marginTop: 0 }}>记录与同步</p>
+        <button className="inputrow" onClick={onHistory}>
+          <span>历史记录</span>
+          <span style={{ color: 'var(--green)', fontSize: 12 }}>{historyCount} 条 ›</span>
+        </button>
+        <button
+          className="inputrow"
+          onClick={onRefresh}
+          disabled={!auth || syncing}
+          style={{ opacity: (!auth || syncing) ? 0.5 : 1 }}
+        >
+          <span>{syncing ? '正在同步…' : '立即同步'}</span>
+          <span style={{ color: 'var(--ink-3)', fontSize: 12 }}>{auth ? '拉取云端最新' : '需先登录'}</span>
+        </button>
+        <p className="hint">登录后每 30 秒自动拉取一次，网络恢复也会自动补推本机改动。</p>
       </div>
 
       <div className="pad" style={{ marginTop: 22 }}>

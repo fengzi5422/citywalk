@@ -6,6 +6,7 @@ import { initDb, closeDb } from './db.js'
 import authRoutes from './routes/auth.js'
 import tripRoutes from './routes/trips.js'
 import shareRoutes from './routes/shares.js'
+import historyRoutes from './routes/history.js'
 
 const app = Fastify({
   logger: { level: config.isProd ? 'info' : 'warn' },
@@ -49,6 +50,7 @@ app.get('/api/health', async () => ({
 await app.register(authRoutes)
 await app.register(tripRoutes)
 await app.register(shareRoutes)
+await app.register(historyRoutes)
 
 app.setNotFoundHandler((req, reply) => {
   reply.code(404).send({ ok: false, error: `没有这个接口：${req.method} ${req.url}` })

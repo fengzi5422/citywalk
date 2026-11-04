@@ -56,6 +56,36 @@ export function initDb() {
     );
     CREATE INDEX IF NOT EXISTS idx_shares_trip ON shares(trip_id);
     CREATE INDEX IF NOT EXISTS idx_shares_user ON shares(user_id);
+
+    -- 操作历史：id 由客户端生成，离线补报时用 INSERT OR IGNORE 去重
+    CREATE TABLE IF NOT EXISTS events (
+      id         TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      trip_id    TEXT,
+      type       TEXT NOT NULL,
+      title      TEXT NOT NULL,
+      detail     TEXT,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_events_user ON events(user_id, created_at DESC);
+
+    -- 行程版本快照：每次 PUT 留一份，行程删除后仍可回溯
+    CREATE TABLE IF NOT EXISTS trip_versions (
+      id         TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      trip_id    TEXT NOT NULL,
+      title      TEXT NOT NULL,
+      payload    TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_versions_trip ON trip_versions(user_id, trip_id, created_at DESC);
+
+    -- 轻量用户状态（收藏等），按 updatedAt 取新
+    CREATE TABLE IF NOT EXISTS user_state (
+      user_id    TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      payload    TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
   `)
 
   return db

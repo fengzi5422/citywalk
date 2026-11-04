@@ -1,4 +1,5 @@
 import { getDb } from '../db.js'
+import { saveVersion } from './history.js'
 
 const MAX_PAYLOAD = 256 * 1024
 
@@ -68,6 +69,9 @@ export default async function tripRoutes(app) {
         updated_at = excluded.updated_at
       WHERE trips.user_id = excluded.user_id
     `).run(id, req.user.sub, title, city, payload, now, now)
+
+    // 每次写入留一份版本快照，改错了能回溯；每行程只保留最近 20 份
+    saveVersion(db, req.user.sub, id, title, payload)
 
     return { ok: true, data: { id, updatedAt: now } }
   })

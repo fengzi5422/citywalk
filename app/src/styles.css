@@ -559,3 +559,33 @@ svg { display: block; }
   flex: none; font-size: 12px; color: var(--ink-3);
   border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
 }
+
+/* ---------- 历史记录 ---------- */
+.hist-stat { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hist-list { display: flex; flex-direction: column; margin-top: 8px; }
+.hist-row {
+  display: flex; gap: 12px; align-items: flex-start; width: 100%;
+  text-align: left; padding: 12px 2px; border-bottom: 1px solid var(--line-2);
+}
+.hist-row.clickable:hover { background: var(--green-soft); }
+.hist-dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--green); }
+.hist-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.hist-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.hist-tag {
+  flex: none; font-size: 11px; font-weight: 500; color: var(--green);
+  background: var(--green-soft); border-radius: 6px; padding: 2px 7px;
+}
+.hist-title { font-size: 13.5px; font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-detail { font-size: 12px; color: var(--ink-2); }
+.hist-meta { font-size: 11px; color: var(--ink-3); }
+.hist-ver { margin-top: 10px; }
+.ver-box {
+  padding: 8px 12px 12px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 12px; margin-top: 6px;
+}
+.ver-item {
+  display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left;
+  padding: 8px 0; border-bottom: 1px solid var(--line-2); font-size: 12.5px; color: var(--ink);
+}
+.ver-item:last-child { border-bottom: none; }
+.ver-detail { font-size: 11.5px; color: var(--green); margin-top: 3px; }

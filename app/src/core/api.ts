@@ -44,6 +44,31 @@ export interface RemoteTrip {
   updatedAt: number
 }
 
+export interface RemoteEvent {
+  id: string
+  tripId: string | null
+  type: string
+  title: string
+  detail: string | null
+  createdAt: number
+}
+
+export interface RemoteVersion {
+  id: string
+  title: string
+  createdAt: number
+}
+
+export interface UserState {
+  saved: string[]
+  [key: string]: unknown
+}
+
+export interface RemoteState {
+  state: UserState
+  updatedAt: number
+}
+
 export const api = {
   health: () => req<{ service: string; version: string }>('/api/health', { anonymous: true }),
 
@@ -73,6 +98,27 @@ export const api = {
 
   deleteTrip: (id: string) =>
     req<{ deleted: number }>(`/api/trips/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  postEvents: (events: unknown[]) =>
+    req<{ saved: number }>('/api/history', { method: 'POST', body: JSON.stringify({ events }) }),
+
+  listHistory: (limit = 100) => req<RemoteEvent[]>(`/api/history?limit=${limit}`),
+
+  listVersions: (tripId: string) =>
+    req<RemoteVersion[]>(`/api/trips/${encodeURIComponent(tripId)}/versions`),
+
+  getVersion: (tripId: string, vid: string) =>
+    req<{ trip: Trip; createdAt: number }>(
+      `/api/trips/${encodeURIComponent(tripId)}/versions/${encodeURIComponent(vid)}`,
+    ),
+
+  getState: () => req<RemoteState | null>('/api/state'),
+
+  putState: (state: UserState, updatedAt: number) =>
+    req<{ updatedAt: number }>('/api/state', {
+      method: 'PUT',
+      body: JSON.stringify({ state, updatedAt }),
+    }),
 
   createShare: (tripId: string, payload: unknown) =>
     req<RemoteShare>('/api/shares', { method: 'POST', body: JSON.stringify({ tripId, payload }) }),

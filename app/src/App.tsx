@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PLACES } from './data/places'
 import { generatePlan } from './core/scheduler'
 import { recomputeDay } from './core/day'
@@ -7,6 +7,10 @@ import { findTemplate } from './data/templates'
 import { loadBaseMap, saveBaseMap, type BaseMapSetting } from './core/mapConfig'
 import { clearAuth, loadAuth, saveAuth, type Auth } from './core/auth'
 import { api, mergeTrips } from './core/api'
+import {
+  appendHistory, loadHistory, makeEvent, mergeHistory, saveHistory,
+  type HistoryEvent,
+} from './core/history'
 import type { Prefs, Trip } from './core/types'
 import { StatusBar, TabBar, type TabKey } from './components/Chrome'
 import Explore from './screens/Explore'
@@ -18,6 +22,7 @@ import Today from './screens/Today'
 import TripList from './screens/TripList'
 import Saved from './screens/Saved'
 import Me from './screens/Me'
+import History from './screens/History'
 import Login from './screens/Login'
 import ShareView from './screens/ShareView'
 
@@ -26,6 +31,7 @@ export type Route =
   | { name: 'list' }
   | { name: 'saved' }
   | { name: 'me' }
+  | { name: 'history' }
   | { name: 'city' }
   | { name: 'place'; id: string }
   | { name: 'create'; templateId?: string }
@@ -35,6 +41,8 @@ export type Route =
 
 const TRIPS_KEY = 'citywalk.trips.v1'
 const SAVED_KEY = 'citywalk.saved.v1'
+const STATE_AT_KEY = 'citywalk.state.at.v1'
+const PULL_INTERVAL = 30_000
 
 function readShareToken(): string | null {
   const m = location.hash.match(/^#\/s\/([a-z0-9]+)/i)
@@ -57,18 +65,41 @@ export default function App() {
   const [route, setRoute] = useState<Route>({ name: 'explore' })
   const [auth, setAuth] = useState<Auth | null>(() => loadAuth())
   const [syncing, setSyncing] = useState(false)
+  const [history, setHistory] = useState<HistoryEvent[]>(() => loadHistory())
+  const [tick, setTick] = useState(0)
+
   const pushedAt = useRef<Map<string, number>>(new Map())
+  const stateAtRef = useRef<number>(Number(localStorage.getItem(STATE_AT_KEY)) || 0)
+  const pushedStateRef = useRef<string>('')
+  const prevTrips = useRef<Map<string, { updatedAt: number; title: string }>>(new Map())
+  const tripsInit = useRef(false)
+  const lastSavedSig = useRef<string | null>(null)
+  const skipTripDiff = useRef(false)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  /** 统一的同步触发源：定时、网络恢复、手动按钮、失败重试都走这里 */
+  const refresh = useCallback(() => setTick((t) => t + 1), [])
 
   const updateBasemap = (next: BaseMapSetting) => {
     setBasemap(next)
     saveBaseMap(next)
   }
 
+  useEffect(() => { localStorage.setItem(TRIPS_KEY, JSON.stringify(trips)) }, [trips])
+  useEffect(() => { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)) }, [saved])
+  useEffect(() => { saveHistory(history) }, [history])
+
+  // 离线改动也要记住时间戳，登录合并时才不会把本机较新的收藏覆盖掉
+  // 用签名比对：首次运行与 StrictMode 双执行但内容未变时都不更新时间戳
   useEffect(() => {
-    localStorage.setItem(TRIPS_KEY, JSON.stringify(trips))
-  }, [trips])
-  useEffect(() => {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(saved))
+    const sig = JSON.stringify(saved)
+    if (lastSavedSig.current === sig) return
+    const isFirst = lastSavedSig.current === null
+    lastSavedSig.current = sig
+    if (isFirst) return
+    const at = Date.now()
+    stateAtRef.current = at
+    localStorage.setItem(STATE_AT_KEY, String(at))
   }, [saved])
 
   // 分享链接走 hash：#/s/<token>，优先于应用内路由
@@ -81,17 +112,150 @@ export default function App() {
 
   const go = (r: Route) => setRoute(r)
 
-  // 登录后把本地与云端合并，冲突取 updatedAt 较新的那份
+  // 对比行程快照生成操作历史；云端拉取回来的变化不重复记
+  useEffect(() => {
+    const skip = skipTripDiff.current
+    skipTripDiff.current = false
+    const prev = prevTrips.current
+    const next = new Map(trips.map((t) => [t.id, { updatedAt: t.updatedAt, title: t.title }]))
+    if (tripsInit.current && !skip) {
+      const events: HistoryEvent[] = []
+      for (const t of trips) {
+        if (!prev.has(t.id)) {
+          events.push(makeEvent({ type: 'create', tripId: t.id, title: `创建「${t.title}」`, detail: '本机生成' }))
+        } else if (prev.get(t.id)!.updatedAt !== t.updatedAt) {
+          events.push(makeEvent({ type: 'edit', tripId: t.id, title: `修改「${t.title}」`, detail: '日程已更新' }))
+        }
+      }
+      for (const [id, info] of prev) {
+        if (!next.has(id)) events.push(makeEvent({ type: 'delete', tripId: id, title: `删除「${info.title}」` }))
+      }
+      if (events.length) setHistory((h) => appendHistory(h, events))
+    }
+    tripsInit.current = true
+    prevTrips.current = next
+  }, [trips])
+
+  // 登录后开启 30 秒定时拉取，并在网络恢复时立刻补一次
+  useEffect(() => {
+    if (!auth) return
+    const id = setInterval(refresh, PULL_INTERVAL)
+    const onOnline = () => refresh()
+    window.addEventListener('online', onOnline)
+    return () => {
+      clearInterval(id)
+      window.removeEventListener('online', onOnline)
+    }
+  }, [auth, refresh])
+
+  useEffect(() => () => {
+    if (retryTimer.current) clearTimeout(retryTimer.current)
+  }, [])
+
+  // 云端 → 本机：行程、事件时间线、收藏状态
+  useEffect(() => {
+    if (!auth) return
+    let cancelled = false
+    ;(async () => {
+      const [remote, remoteHistory, remoteState] = await Promise.all([
+        api.listTrips(), api.listHistory(100), api.getState(),
+      ])
+      if (cancelled) return
+      if (remote) {
+        remote.forEach((r) => pushedAt.current.set(r.id, r.updatedAt))
+        setTrips((local) => {
+          const merged = mergeTrips(local, remote)
+          const same = merged.length === local.length &&
+            merged.every((t, i) => t.id === local[i].id && t.updatedAt === local[i].updatedAt)
+          if (same) return local
+          skipTripDiff.current = true
+          return merged
+        })
+      }
+      if (remoteHistory) setHistory((h) => mergeHistory(h, remoteHistory))
+      if (remoteState && remoteState.updatedAt > stateAtRef.current) {
+        stateAtRef.current = remoteState.updatedAt
+        localStorage.setItem(STATE_AT_KEY, String(remoteState.updatedAt))
+        setSaved(Array.isArray(remoteState.state?.saved) ? remoteState.state.saved : [])
+      }
+    })()
+    return () => { cancelled = true }
+  }, [auth, tick])
+
+  // 本机 → 云端：行程改动防抖推送，失败 5 秒后自动重试
+  useEffect(() => {
+    if (!auth) return
+    const timer = setTimeout(async () => {
+      setSyncing(true)
+      let failed = false
+      for (const trip of trips) {
+        if ((pushedAt.current.get(trip.id) ?? 0) >= trip.updatedAt) continue
+        const ok = await api.putTrip(trip)
+        if (ok) pushedAt.current.set(trip.id, trip.updatedAt)
+        else failed = true
+      }
+      setSyncing(false)
+      if (failed) {
+        if (retryTimer.current) clearTimeout(retryTimer.current)
+        retryTimer.current = setTimeout(refresh, 5000)
+      }
+    }, 900)
+    return () => clearTimeout(timer)
+  }, [trips, auth, tick, refresh])
+
+  // 本机 → 云端：操作事件补报（离线期间攒着，联网后自动补）
+  useEffect(() => {
+    if (!auth) return
+    const pending = history.filter((e) => !e.synced).slice(0, 50)
+    if (!pending.length) return
+    const timer = setTimeout(async () => {
+      const ok = await api.postEvents(pending)
+      if (ok) {
+        const ids = new Set(pending.map((e) => e.id))
+        setHistory((h) => h.map((e) => (ids.has(e.id) ? { ...e, synced: true } : e)))
+      }
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [history, auth, tick])
+
+  // 本机 → 云端：收藏等轻量状态
+  useEffect(() => {
+    if (!auth) return
+    const sig = JSON.stringify(saved)
+    if (sig === pushedStateRef.current) return
+    const timer = setTimeout(async () => {
+      const at = Date.now()
+      const ok = await api.putState({ saved }, at)
+      if (ok) {
+        pushedStateRef.current = sig
+        stateAtRef.current = at
+        localStorage.setItem(STATE_AT_KEY, String(at))
+      }
+    }, 900)
+    return () => clearTimeout(timer)
+  }, [saved, auth, tick])
+
+  // 登录后立刻合并一次，保证原有「换设备接着用」体验不变
   const handleLogin = async (a: Auth) => {
     saveAuth(a)
     setAuth(a)
     setSyncing(true)
-    const remote = await api.listTrips()
+    const [remote, remoteHistory, remoteState] = await Promise.all([
+      api.listTrips(), api.listHistory(100), api.getState(),
+    ])
     setSyncing(false)
     if (remote) {
       remote.forEach((r) => pushedAt.current.set(r.id, r.updatedAt))
+      skipTripDiff.current = true
       setTrips((local) => mergeTrips(local, remote))
     }
+    if (remoteHistory) setHistory((h) => mergeHistory(h, remoteHistory))
+    if (remoteState && remoteState.updatedAt > stateAtRef.current) {
+      stateAtRef.current = remoteState.updatedAt
+      localStorage.setItem(STATE_AT_KEY, String(remoteState.updatedAt))
+      setSaved(Array.isArray(remoteState.state?.saved) ? remoteState.state.saved : [])
+    }
+    setHistory((h) => appendHistory(h, [makeEvent({ type: 'login', title: '登录账号', detail: a.user.email })]))
     setRoute({ name: 'me' })
   }
 
@@ -99,27 +263,17 @@ export default function App() {
     clearAuth()
     setAuth(null)
     pushedAt.current.clear()
+    pushedStateRef.current = ''
+    if (retryTimer.current) clearTimeout(retryTimer.current)
   }
 
-  // 本地改动延迟推送，避免每敲一下就发一次请求
-  useEffect(() => {
-    if (!auth) return
-    const timer = setTimeout(async () => {
-      setSyncing(true)
-      for (const trip of trips) {
-        if ((pushedAt.current.get(trip.id) ?? 0) >= trip.updatedAt) continue
-        const ok = await api.putTrip(trip)
-        if (ok) pushedAt.current.set(trip.id, trip.updatedAt)
-      }
-      setSyncing(false)
-    }, 900)
-    return () => clearTimeout(timer)
-  }, [trips, auth])
-  const activeTab: TabKey = ['explore', 'list', 'saved', 'me'].includes(route.name)
-    ? (route.name as TabKey)
-    : route.name === 'city' || route.name === 'place' || route.name === 'create'
-      ? 'explore'
-      : 'list'
+  const activeTab: TabKey =
+    ['explore', 'list', 'saved', 'me'].includes(route.name)
+      ? (route.name as TabKey)
+      : route.name === 'history' ? 'me'
+        : route.name === 'city' || route.name === 'place' || route.name === 'create'
+          ? 'explore'
+          : 'list'
 
   const showTab = ['explore', 'list', 'saved', 'me'].includes(route.name)
 
@@ -217,7 +371,7 @@ export default function App() {
           <ShareView
             token={shareToken}
             onExit={() => {
-              history.replaceState(null, '', location.pathname)
+              window.history.replaceState(null, '', location.pathname)
               setShareToken(null)
             }}
           />
@@ -322,19 +476,35 @@ export default function App() {
           <Login onBack={() => go({ name: 'me' })} onDone={handleLogin} />
         )}
 
+        {route.name === 'history' && (
+          <History
+            events={history}
+            trips={trips}
+            auth={auth}
+            syncing={syncing}
+            onBack={() => go({ name: 'me' })}
+            onOpenTrip={(id) => go({ name: 'trip', id })}
+            onRefresh={refresh}
+          />
+        )}
+
         {route.name === 'me' && (
           <Me
             trips={trips}
             auth={auth}
             syncing={syncing}
+            historyCount={history.length}
             onLogin={() => go({ name: 'login' })}
             onLogout={handleLogout}
+            onHistory={() => go({ name: 'history' })}
+            onRefresh={refresh}
             basemap={basemap}
             onBasemapChange={updateBasemap}
             onClear={() => {
               if (confirm('清空本机保存的行程与收藏？此操作不可恢复。')) {
                 setTrips([])
                 setSaved([])
+                setHistory([])
               }
             }}
           />
