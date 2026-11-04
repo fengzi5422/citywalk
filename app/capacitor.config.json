@@ -1,0 +1,13 @@
+{
+  "appId": "com.fengzi5422.citywalk",
+  "appName": "城市自由行",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}

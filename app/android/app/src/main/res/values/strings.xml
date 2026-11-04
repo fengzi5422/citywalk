@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">城市自由行</string>
+    <string name="title_activity_main">城市自由行</string>
+    <string name="package_name">com.fengzi5422.citywalk</string>
+    <string name="custom_url_scheme">com.fengzi5422.citywalk</string>
+</resources>

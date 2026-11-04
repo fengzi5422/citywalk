@@ -33,5 +33,16 @@ desktop.ini
 # 验证截图（可由 docs/*.mjs 重新生成）
 app/shots/
 
+# Capacitor / Android 构建产物（android/ 工程本身要入库）
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.apk
+*.aab
+*.keystore
+*.jks
+
 # 工位记忆与自动化产物，不入库
 .workbuddy/

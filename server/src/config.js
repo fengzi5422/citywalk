@@ -11,7 +11,10 @@ export const config = {
   dbPath: env.DB_PATH ? resolve(env.DB_PATH) : resolve(here, '../data/citywalk.db'),
   jwtSecret: env.JWT_SECRET || 'dev-secret-change-before-deploy',
   jwtExpiresIn: env.JWT_EXPIRES_IN || '30d',
-  corsOrigins: (env.CORS_ORIGINS || 'http://127.0.0.1:5178,http://localhost:5178')
+  // 默认白名单含 Capacitor WebView 的 origin（Android 默认 https://localhost，iOS 为 capacitor://localhost），
+  // 便于打包成原生 App 后直连后端；同源网页部署不触发 CORS，不受影响。
+  corsOrigins: (env.CORS_ORIGINS ||
+    'http://127.0.0.1:5178,http://localhost:5178,http://localhost,https://localhost,capacitor://localhost')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),

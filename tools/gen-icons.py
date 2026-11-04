@@ -88,6 +88,71 @@ SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="51
 </svg>
 '''
 
+def write_foreground_png(path, size):
+    """Android 自适应图标前景层：透明底 + 白色定位圆环 + 陶土橙路径点。
+
+    自适应图标只显示画布中心的 66%，所以图案整体缩进到中心 60% 安全区；
+    墨绿底由 adaptive-icon 的 <background> 提供，这里保持透明。
+    """
+    w = h = size
+    px = bytearray(w * h * 4)
+
+    def dot(x, y, color, alpha=255):
+        if 0 <= x < w and 0 <= y < h:
+            i = (y * w + x) * 4
+            px[i], px[i + 1], px[i + 2], px[i + 3] = (*color, alpha)
+
+    def disc(cx, cy, r, color):
+        for y in range(int(cy - r), int(cy + r) + 1):
+            for x in range(int(cx - r), int(cx + r) + 1):
+                if (x - cx) ** 2 + (y - cy) ** 2 <= r ** 2:
+                    dot(x, y, color)
+
+    pad, span = size * 0.20, size * 0.60
+    route = [(0.20, 0.72), (0.28, 0.60), (0.34, 0.48), (0.38, 0.34),
+             (0.46, 0.24), (0.58, 0.20), (0.70, 0.24), (0.80, 0.34)]
+    for fx, fy in route:
+        if 0.38 < fx < 0.64 and 0.36 < fy < 0.66:
+            continue
+        disc(pad + fx * span, pad + fy * span, span * 0.022, CLAY)
+
+    cx = cy = size * 0.5
+    r_outer, r_inner = span * 0.235, span * 0.175
+    for y in range(int(cy - r_outer), int(cy + r_outer) + 1):
+        for x in range(int(cx - r_outer), int(cx + r_outer) + 1):
+            d2 = (x - cx) ** 2 + (y - cy) ** 2
+            if r_inner ** 2 <= d2 <= r_outer ** 2:
+                dot(x, y, WHITE)
+    disc(cx, cy, span * 0.085, WHITE)
+
+    raw = b''.join(b'\x00' + bytes(px[y * w * 4:(y + 1) * w * 4]) for y in range(h))
+
+    def chunk(tag, data):
+        return struct.pack('>I', len(data)) + tag + data + struct.pack('>I', zlib.crc32(tag + data) & 0xffffffff)
+
+    png = (b'\x89PNG\r\n\x1a\n'
+           + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6, 0, 0, 0))
+           + chunk(b'IDAT', zlib.compress(raw, 9))
+           + chunk(b'IEND', b''))
+    with open(path, 'wb') as f:
+        f.write(png)
+    print('wrote', path, size, 'x', size, '(foreground)')
+
+
+def gen_android_icons():
+    """给 Capacitor Android 工程生成各密度启动图标（工程不存在时跳过）。"""
+    res = os.path.join(os.path.dirname(OUT), 'android', 'app', 'src', 'main', 'res')
+    if not os.path.isdir(os.path.dirname(res)):
+        return
+    for dpi, size in {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}.items():
+        d = os.path.join(res, 'mipmap-' + dpi)
+        os.makedirs(d, exist_ok=True)
+        write_png(os.path.join(d, 'ic_launcher.png'), size)
+        write_png(os.path.join(d, 'ic_launcher_round.png'), size)
+        # 自适应图标前景画布为 108dp（=@2.25 倍 mdpi 尺寸）
+        write_foreground_png(os.path.join(d, 'ic_launcher_foreground.png'), round(size * 2.25))
+
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     write_png(os.path.join(OUT, 'icon-192.png'), 192)
@@ -95,3 +160,4 @@ if __name__ == '__main__':
     with open(os.path.join(OUT, 'icon.svg'), 'w', encoding='utf-8') as f:
         f.write(SVG)
     print('wrote', os.path.join(OUT, 'icon.svg'))
+    gen_android_icons()

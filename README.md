@@ -2,7 +2,7 @@
 
 面向国内城市 1—5 天自由行的行程规划与随行助手：选城市、填条件，得到一份路线合理、可随时修改、旅行中能直接用的按天日程。
 
-**当前状态：v0.9.0 · 候选交付版。** 前端（含 PWA 离线、合规文本、数据备份、账号注销、桌面宽屏）、后端（账号 / 同步 / 历史 / 版本 / 分享）、内容数据体检、部署与运维脚本、全套自动化验收均已就绪，可作为产品交付使用。正式上线前仍需替换真实 POI 内容、申请并标注审图号、配置 HTTPS 与强密钥——清单见「上线前必做」。
+**当前状态：v0.9.0 · 候选交付版。** 前端（含 PWA 离线、合规文本、数据备份、账号注销、桌面宽屏）、后端（账号 / 同步 / 历史 / 版本 / 分享）、原生 App 工程（Capacitor 8 + Android）、内容数据体检、部署与运维脚本、全套自动化验收均已就绪，可作为产品交付使用。正式上线前仍需替换真实 POI 内容、申请并标注审图号、配置 HTTPS 与强密钥——清单见「上线前必做」。
 
 ## 目录
 
@@ -11,7 +11,8 @@ ly/
 ├── app/                 前端：Vite + React + TypeScript
 │   ├── public/          PWA manifest / Service Worker / 图标
 │   ├── src/             界面、排程引擎、同步与备份
-│   ├── docs/            端到端与验收脚本、RESOURCES.md
+│   ├── docs/            端到端与验收脚本、RESOURCES.md、CAPACITOR.md
+│   ├── android/         Capacitor Android 原生工程
 │   ├── Dockerfile       多阶段构建
 │   └── nginx.conf       静态托管 + /api 反代
 ├── server/              后端：Fastify + node:sqlite
@@ -27,7 +28,7 @@ ly/
 └── README.md
 ```
 
-相关文档：`DEPLOY.md`（从 GitHub clone 到服务器直接部署）、`output/20261103-travelapp/stage3/城市自由行App产品需求与规划设计.docx`（需求与规划）、`design/城市自由行-App设计稿-v1.html`（高保真设计稿）、`app/docs/RESOURCES.md`（正式资源清单与替代方案）。
+相关文档：`DEPLOY.md`（从 GitHub clone 到服务器直接部署）、`app/docs/CAPACITOR.md`（原生 App 打包）、`output/20261103-travelapp/stage3/城市自由行App产品需求与规划设计.docx`（需求与规划）、`design/城市自由行-App设计稿-v1.html`（高保真设计稿）、`app/docs/RESOURCES.md`（正式资源清单与替代方案）。
 
 ## 本地开发
 
@@ -148,13 +149,13 @@ cd app && npm ci && npm run build      # 产物在 app/dist
 ### 上线前必做
 
 - [ ] 设置强 `JWT_SECRET`（32 字节随机；`deploy.sh` 会校验）
-- [ ] `CORS_ORIGINS` 改成正式域名，去掉 localhost（同源部署可留空）
+- [ ] `CORS_ORIGINS` 改成正式域名，去掉 localhost（同源部署可留空；原生 App 需加 `https://localhost` / `capacitor://localhost`）
 - [ ] 配 HTTPS（Caddy 或 nginx + certbot）
 - [ ] 确认数据卷 `./data` 已挂载，并配置定时 `scripts/backup.sh`
 - [ ] 天地图 key 的 Referer 白名单换成正式域名
 - [ ] `VITE_TIANDITU_AUDIT_NO` 填入**真实审图号**（地图页会自动标注）
 - [ ] 把 `app/src/data/places.json` 换成真实 POI，并跑 `validate:data`
-- [ ] 前后端分离部署时填 `VITE_API_BASE` 并把前端来源加入 `CORS_ORIGINS`
+- [ ] 前后端分离部署 / 打包原生 App 时填 `VITE_API_BASE` 并把前端来源加入 `CORS_ORIGINS`
 
 ## 多端、离线与同步
 
@@ -180,7 +181,7 @@ VITE_API_BASE=https://api.example.com npm run build
 | 冲突 | 最后写入者胜，没有逐字段合并 |
 | 登录凭证 | JWT 存本机，默认 30 天；无邮箱验证与找回密码 |
 
-**部署到云服务器后，App 端与网页端可随时使用**：账号、云端库、同源反代、数据卷持久化、30s 定时拉取、断网补推、收藏上云、事件时间线、版本快照、PWA 离线全部就绪。原生 App 仍可用 Capacitor 把 `app/dist` 包壳，业务逻辑与同步层不用改。
+**部署到云服务器后，App 端与网页端可随时使用**：账号、云端库、同源反代、数据卷持久化、30s 定时拉取、断网补推、收藏上云、事件时间线、版本快照、PWA 离线全部就绪。原生 App 工程已生成（Capacitor 8 + `app/android/`），构建 APK / AAB 的完整步骤见 `app/docs/CAPACITOR.md`；网页端、PWA 与原生壳共用同一个后端和同一套同步逻辑，不需要改服务端。
 
 ## 合规与数据可携带
 
@@ -205,9 +206,9 @@ VITE_API_BASE=https://api.example.com npm run build
 | PWA 与离线 | 已完成（可安装、离线 app shell、离线条、联网补推） |
 | 桌面宽屏 / 错误兜底 | 已完成（≥1100px 品牌侧栏、ErrorBoundary） |
 | 合规文本 / 备份 / 注销 | 已完成 |
-| 部署运维 | 已完成（Compose / nginx / deploy / backup / restore） |
+| 部署运维 | 已完成（Compose / nginx / deploy / backup / restore、DEPLOY.md） |
+| 原生 App | 已完成 Android 工程（Capacitor 8，可构建 APK；iOS 需 macOS + Xcode） |
 | 内容后台 | 未开始 |
-| 原生 App | 未开始（可用 Capacitor 包壳，无需改服务端） |
 
 ## 已知限制
 
@@ -217,7 +218,7 @@ VITE_API_BASE=https://api.example.com npm run build
 - POI、营业时间、票价均为成都示例数据，已外置 `app/src/data/places.json` 并配套体检脚本，可直接替换。
 - 审图号需正式申请后填入 `VITE_TIANDITU_AUDIT_NO`；未填时地图页明确提示，不会编造编号。
 - 分享短链 7 天有效，匿名 `ownerKey` 可撤销；无账号也能创建 / 撤销。
-- 没有原生 App；PWA 可安装但不是原生包。桌面端为宽屏侧栏 + 手机框布局，非独立桌面重构。
+- 原生 App 目前只有 Android 工程；iOS 需 macOS + Xcode，正式上架需自行配置签名、真实 POI 与审图号。Capacitor 壳内不注册 Service Worker，静态资源随 APK 打包，前端更新需重新发版。PWA 仍可安装但不等于原生包。桌面端为宽屏侧栏 + 手机框布局，非独立桌面重构。
 - `node:sqlite` 是 Node 22 实验特性；SQLite 单机单文件，不能起多个 api 副本共写。
 
 ## 版本
