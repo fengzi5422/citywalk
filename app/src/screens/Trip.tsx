@@ -372,7 +372,9 @@ export default function TripScreen({ trip, basemap, onBasemapChange, onBack, onU
               </>
             )}
             <p className="sheet-note">
-              演示版链接只在本机有效；正式版由服务端生成短链，并记录撤销状态与访问次数。
+              {share?.remote
+                ? '链接由服务端生成，可在任意设备打开；撤销后立即失效，访问次数会被记录。'
+                : '服务端不可用，当前链接只在本机有效。'}
             </p>
           </div>
         </>
@@ -446,7 +448,7 @@ export default function TripScreen({ trip, basemap, onBasemapChange, onBack, onU
       {toast && (
         <div
           style={{
-            position: 'absolute', left: '50%', bottom: 96, transform: 'translateX(-50%)',
+            position: 'absolute', left: '50%', bottom: 268, transform: 'translateX(-50%)',
             background: 'rgba(26,26,23,.9)', color: '#fff', fontSize: 12, padding: '9px 14px',
             borderRadius: 999, zIndex: 60, whiteSpace: 'nowrap', maxWidth: '88%',
           }}
