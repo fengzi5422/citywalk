@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="docx-page-size" content="A4">
+<title>城市自由行 App 产品需求与规划设计</title>
+<style>
+/* 页面规则：正文页脚居中页码，封面不显示页脚 */
+@page {
+  @bottom-center { content: counter(page); }
+}
+@page cover {
+  @bottom-center { content: none; }
+}
+section[role="cover"] { page: cover; }
+
+:root {
+  --ff-heading: "Microsoft YaHei", "微软雅黑", sans-serif;
+  --ff-body: "SimSun", "宋体", serif;
+  --ff-mono: "Consolas", "Courier New", monospace;
+
+  --fs-cover-title: 34pt;
+  --fs-cover-sub: 17pt;
+  --fs-kicker: 10.5pt;
+  --fs-lead: 12pt;
+  --fs-meta: 9.5pt;
+  --fs-toc-title: 20pt;
+  --fs-toc-l1: 10.5pt;
+  --fs-toc-l2: 9.5pt;
+  --fs-h2: 16pt;
+  --fs-h3: 13pt;
+  --fs-body: 12pt;
+  --fs-table: 9.5pt;
+  --fs-mono: 10.5pt;
+  --fs-pre: 8.5pt;
+  --fs-summary: 20pt;
+
+  --color-bg: #FFFFFF;
+  --color-white: #FFFFFF;
+  --color-text: #1F2329;
+  --color-strong: #10305C;
+  --color-muted: #5F6B7A;
+  --color-border: #D9E1EC;
+  --color-surface: #F2F6FB;
+  --color-highlight: #EEF3FA;
+  --color-primary: #1565C0;
+  --color-deep: #12386B;
+  --color-accent: #00897B;
+  --color-pre-bg: #F7F9FC;
+  --color-pre-text: #24405F;
+  --color-quote-bar: #9AA7B8;
+  --color-quote-bg: #F7F9FC;
+  --color-quote-text: #3D4A5C;
+  --fs-quote: 10.5pt;
+
+  --sp-0: 1px;
+  --sp-1: 2px;
+  --sp-2: 4px;
+  --sp-3: 5px;
+  --sp-4: 6px;
+  --sp-5: 7px;
+  --sp-6: 8px;
+  --sp-7: 9px;
+  --sp-8: 10px;
+  --sp-9: 12px;
+  --sp-10: 14px;
+  --sp-11: 16px;
+  --sp-12: 18px;
+  --sp-13: 20px;
+  --sp-14: 30px;
+  --sp-15: 40px;
+  --sp-16: 44px;
+  --sp-17: 46px;
+  --sp-18: 118px;
+  --sp-em-15: 1.5em;
+  --sp-em-21: 2.1em;
+
+  --lh-tight: 1.25;
+  --lh-head: 1.4;
+  --lh-sub: 1.5;
+  --lh-body: 1.72;
+  --lh-compact: 1.42;
+
+  --spacing-paragraph: 0.62em;
+  --page-content-width: 15.6cm;
+}
+
+* { box-sizing: border-box; }
+body {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  max-width: var(--page-content-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 封面 */
+.cover-kicker {
+  font-family: var(--ff-heading); font-size: var(--fs-kicker); font-weight: 700;
+  color: var(--color-primary); letter-spacing: 0.22em;
+  text-align: left; text-indent: 0;
+  margin-top: var(--sp-18); margin-bottom: var(--sp-8);
+}
+.cover-title {
+  font-family: var(--ff-heading); font-size: var(--fs-cover-title); font-weight: 700;
+  color: var(--color-deep); line-height: var(--lh-tight);
+  text-align: left; text-indent: 0;
+  margin-top: 0; margin-bottom: var(--sp-4);
+}
+.cover-sub {
+  font-family: var(--ff-heading); font-size: var(--fs-cover-sub); font-weight: 400;
+  color: var(--color-muted); letter-spacing: 0.04em;
+  text-align: left; text-indent: 0;
+  margin-top: 0; margin-bottom: var(--sp-16);
+}
+.cover-lead {
+  font-family: var(--ff-body); font-size: var(--fs-lead); color: var(--color-text);
+  line-height: var(--lh-body); text-align: left; text-indent: 0;
+  margin-top: 0; margin-bottom: var(--sp-15);
+}
+.cover-meta-line {
+  font-family: var(--ff-heading); font-size: var(--fs-meta); color: var(--color-muted);
+  text-align: left; text-indent: 0;
+  padding-top: var(--sp-3); padding-bottom: var(--sp-3);
+  margin-top: 0; margin-bottom: 0;
+  border-bottom: 0.5pt solid var(--color-border);
+}
+.cover-meta-line strong { color: var(--color-primary); font-weight: 700; }
+.cover-foot {
+  font-family: var(--ff-heading); font-size: var(--fs-meta); color: var(--color-muted);
+  letter-spacing: 0.06em; text-align: left; text-indent: 0;
+  margin-top: var(--sp-17);
+}
+
+/* 目录 */
+.doc-toc { padding-top: var(--sp-14); }
+.toc-title {
+  font-family: var(--ff-heading); font-size: var(--fs-toc-title); font-weight: 700;
+  color: var(--color-deep); letter-spacing: 0.12em;
+  text-align: left; text-indent: 0;
+  margin-top: 0; margin-bottom: var(--sp-12);
+}
+.toc-list, .toc-list ol, .toc-list ul {
+  list-style: none; list-style-type: none; padding-left: 0; margin: 0;
+}
+.toc-l1 {
+  font-family: var(--ff-heading); font-size: var(--fs-toc-l1); font-weight: 700;
+  color: var(--color-deep); text-indent: 0;
+  margin-top: var(--sp-7); margin-bottom: var(--sp-1);
+}
+.toc-l2 {
+  font-family: var(--ff-body); font-size: var(--fs-toc-l2); color: var(--color-text);
+  text-indent: 0; margin-top: var(--sp-0); margin-bottom: var(--sp-0);
+}
+.toc-sub { margin-top: var(--sp-1); margin-bottom: var(--sp-2); padding-left: var(--sp-em-15); }
+.toc-list a { color: inherit; text-decoration: none; }
+
+/* 内容提要 */
+.executive-summary {
+  background: var(--color-surface);
+  border-left: 4px solid var(--color-primary);
+  padding-top: var(--sp-10); padding-bottom: var(--sp-10);
+  padding-left: var(--sp-11); padding-right: var(--sp-11);
+  margin-top: var(--sp-11); margin-bottom: var(--sp-13);
+}
+.summary-title {
+  font-family: var(--ff-heading); font-size: var(--fs-summary); font-weight: 700;
+  color: var(--color-deep); text-align: left; text-indent: 0;
+  margin-top: 0; margin-bottom: var(--sp-9);
+}
+.summary-text {
+  font-family: var(--ff-body); font-size: var(--fs-body); color: var(--color-text);
+  line-height: var(--lh-body); text-align: justify; text-indent: 2em;
+  margin-top: var(--sp-8); margin-bottom: 0;
+}
+
+/* 正文 */
+.report-body { padding-top: var(--sp-4); }
+p {
+  font-family: var(--ff-body); font-size: var(--fs-body); color: var(--color-text);
+  line-height: var(--lh-body); text-align: justify; text-indent: 2em;
+  margin-top: 0; margin-bottom: var(--spacing-paragraph);
+}
+h2 {
+  font-family: var(--ff-heading); font-size: var(--fs-h2); font-weight: 700;
+  color: var(--color-deep); background: var(--color-highlight);
+  border-left: 6px solid var(--color-primary);
+  padding-top: var(--sp-6); padding-bottom: var(--sp-6);
+  padding-left: var(--sp-9); padding-right: var(--sp-9);
+  line-height: var(--lh-head); text-align: left; text-indent: 0;
+  margin-top: var(--sp-14); margin-bottom: var(--sp-10);
+}
+h3 {
+  font-family: var(--ff-heading); font-size: var(--fs-h3); font-weight: 700;
+  color: var(--color-deep); line-height: var(--lh-sub);
+  text-align: left; text-indent: 0;
+  margin-top: var(--sp-13); margin-bottom: var(--sp-6);
+}
+.h3-mark { color: var(--color-primary); font-weight: 700; }
+strong { font-weight: 700; color: var(--color-strong); }
+.mono { font-family: var(--ff-mono); font-size: var(--fs-mono); }
+
+ul.list, ol.list {
+  margin-top: var(--sp-2); margin-bottom: var(--sp-9); padding-left: var(--sp-em-21);
+}
+ul.list li, ol.list li {
+  font-family: var(--ff-body); font-size: var(--fs-body); color: var(--color-text);
+  line-height: var(--lh-sub); text-align: justify; text-indent: 0;
+  margin-bottom: var(--sp-2);
+}
+
+.callout {
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-surface);
+  padding-top: var(--sp-7); padding-bottom: var(--sp-7);
+  padding-left: var(--sp-9); padding-right: var(--sp-9);
+  margin-top: var(--sp-8); margin-bottom: var(--sp-10);
+}
+
+.quote {
+  font-family: var(--ff-body); font-size: var(--fs-quote); color: var(--color-quote-text);
+  line-height: var(--lh-sub); text-align: justify; text-indent: 0;
+  border-left: 3px solid var(--color-quote-bar);
+  background: var(--color-quote-bg);
+  padding-top: var(--sp-7); padding-bottom: var(--sp-7);
+  padding-left: var(--sp-9); padding-right: var(--sp-9);
+  margin-top: var(--sp-6); margin-bottom: var(--sp-10);
+}
+
+pre.tree {
+  font-family: var(--ff-mono); font-size: var(--fs-pre); color: var(--color-pre-text);
+  background: var(--color-pre-bg); border: 0.5pt solid var(--color-border);
+  line-height: var(--lh-compact); text-indent: 0;
+  padding-top: var(--sp-8); padding-bottom: var(--sp-8);
+  padding-left: var(--sp-9); padding-right: var(--sp-9);
+  margin-top: var(--sp-6); margin-bottom: var(--sp-10);
+}
+
+table.grid, table.summary-metrics {
+  width: 100%; border-collapse: collapse;
+  margin-top: var(--sp-6); margin-bottom: var(--sp-11);
+  font-family: var(--ff-heading);
+}
+table.grid th, table.summary-metrics th {
+  font-family: var(--ff-heading); font-size: var(--fs-table); font-weight: 700;
+  color: var(--color-white); background: var(--color-primary);
+  border: 0.5pt solid var(--color-primary); line-height: var(--lh-sub);
+  padding-top: var(--sp-3); padding-bottom: var(--sp-3);
+  padding-left: var(--sp-5); padding-right: var(--sp-5);
+  text-align: left; text-indent: 0;
+}
+table.grid td, table.summary-metrics td {
+  font-family: var(--ff-heading); font-size: var(--fs-table); color: var(--color-text);
+  border: 0.5pt solid var(--color-border); line-height: var(--lh-sub);
+  padding-top: var(--sp-3); padding-bottom: var(--sp-3);
+  padding-left: var(--sp-5); padding-right: var(--sp-5);
+  text-align: left; vertical-align: top; text-indent: 0;
+}
+table.summary-metrics { margin-top: 0; margin-bottom: var(--sp-2); }
+</style>
+</head>
+<body>
+
+<section role="cover">
+  <p class="cover-kicker">产品规划 · PRODUCT PLANNING</p>
+  <p class="cover-title">城市自由行 App</p>
+  <p class="cover-sub">产品需求与规划设计</p>
+  <p class="cover-lead">把“做攻略”从用户身上转移到系统身上。</p>
+  <p class="cover-lead">一份路线合理、可以随时修改、旅行中能直接用、行程能长期保存的按天日程。</p>
+  <p class="cover-meta-line"><strong>文档版本</strong>　　v1.0　规划稿</p>
+  <p class="cover-meta-line"><strong>适用阶段</strong>　　需求确认 · 设计评审 · 开发排期</p>
+  <p class="cover-meta-line"><strong>首版范围</strong>　　国内单城试点 · 1—5 天自由行 · Android 内测</p>
+  <p class="cover-meta-line"><strong>编制日期</strong>　　2026 年 11 月</p>
+  <p class="cover-foot">一人一座城，一趟可执行的旅行</p>
+</section>
+
+<section role="cover">
+<nav class="doc-toc" aria-label="文档目录">
+  <p class="toc-title">目录</p>
+  <ol class="toc-list">
+<li class="toc-l1"><a href="#section-1">一、文档说明</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-1-1">1.1 目的与读者</a></li>
+<li class="toc-l2"><a href="#section-1-2">1.2 产品定义</a></li>
+<li class="toc-l2"><a href="#section-1-3">1.3 范围与假设</a></li>
+<li class="toc-l2"><a href="#section-1-4">1.4 术语表</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-2">二、需求整理：从想法到可执行需求</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-2-1">2.1 原始诉求拆解</a></li>
+<li class="toc-l2"><a href="#section-2-2">2.2 四个必须补齐的缺口</a></li>
+<li class="toc-l2"><a href="#section-2-3">2.3 需求分层</a></li>
+<li class="toc-l2"><a href="#section-2-4">2.4 首版边界</a></li>
+<li class="toc-l2"><a href="#section-2-5">2.5 待验证假设</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-3">三、目标用户与核心使用场景</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-3-1">3.1 用户分层</a></li>
+<li class="toc-l2"><a href="#section-3-2">3.2 用户画像</a></li>
+<li class="toc-l2"><a href="#section-3-3">3.3 核心使用场景</a></li>
+<li class="toc-l2"><a href="#section-3-4">3.4 关键时刻与体验风险</a></li>
+<li class="toc-l2"><a href="#section-3-5">3.5 非目标用户</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-4">四、核心功能清单与优先级</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-4-1">4.1 功能地图</a></li>
+<li class="toc-l2"><a href="#section-4-2">4.2 P0 功能（首版必须）</a></li>
+<li class="toc-l2"><a href="#section-4-3">4.3 P1 功能（核心稳定后）</a></li>
+<li class="toc-l2"><a href="#section-4-4">4.4 P2 功能（条件成熟后）</a></li>
+<li class="toc-l2"><a href="#section-4-5">4.5 明确不做</a></li>
+<li class="toc-l2"><a href="#section-4-6">4.6 依赖关键路径</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-5">五、关键用户流程</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-5-1">5.1 主流程</a></li>
+<li class="toc-l2"><a href="#section-5-2">5.2 流程 A：首次创建行程</a></li>
+<li class="toc-l2"><a href="#section-5-3">5.3 流程 B：编辑与冲突处理</a></li>
+<li class="toc-l2"><a href="#section-5-4">5.4 流程 C：旅行中的局部调整</a></li>
+<li class="toc-l2"><a href="#section-5-5">5.5 流程 D：保存、分享与复用</a></li>
+<li class="toc-l2"><a href="#section-5-6">5.6 流程 E：异常与降级</a></li>
+<li class="toc-l2"><a href="#section-5-7">5.7 埋点与观测</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-6">六、信息架构与主要页面规划</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-6-1">6.1 信息架构</a></li>
+<li class="toc-l2"><a href="#section-6-2">6.2 导航结构</a></li>
+<li class="toc-l2"><a href="#section-6-3">6.3 页面清单</a></li>
+<li class="toc-l2"><a href="#section-6-4">6.4 页面一：创建行程</a></li>
+<li class="toc-l2"><a href="#section-6-5">6.5 页面二：行程详情（核心页面）</a></li>
+<li class="toc-l2"><a href="#section-6-6">6.6 页面三：今天</a></li>
+<li class="toc-l2"><a href="#section-6-7">6.7 页面状态设计</a></li>
+<li class="toc-l2"><a href="#section-6-8">6.8 体验原则</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-7">七、数据来源与更新策略</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-7-1">7.1 数据分层</a></li>
+<li class="toc-l2"><a href="#section-7-2">7.2 数据源矩阵</a></li>
+<li class="toc-l2"><a href="#section-7-3">7.3 时效与更新策略</a></li>
+<li class="toc-l2"><a href="#section-7-4">7.4 数据质量规则</a></li>
+<li class="toc-l2"><a href="#section-7-5">7.5 授权与使用边界</a></li>
+<li class="toc-l2"><a href="#section-7-6">7.6 内容冷启动</a></li>
+<li class="toc-l2"><a href="#section-7-7">7.7 内容运营流程</a></li>
+<li class="toc-l2"><a href="#section-7-8">7.8 内容健康度指标</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-8">八、个性化推荐逻辑</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-8-1">8.1 四层结构</a></li>
+<li class="toc-l2"><a href="#section-8-2">8.2 用户偏好模型</a></li>
+<li class="toc-l2"><a href="#section-8-3">8.3 候选召回</a></li>
+<li class="toc-l2"><a href="#section-8-4">8.4 排序打分</a></li>
+<li class="toc-l2"><a href="#section-8-5">8.5 排程算法</a></li>
+<li class="toc-l2"><a href="#section-8-6">8.6 节奏参数</a></li>
+<li class="toc-l2"><a href="#section-8-7">8.7 可解释与可控</a></li>
+<li class="toc-l2"><a href="#section-8-8">8.8 反馈闭环与评估</a></li>
+<li class="toc-l2"><a href="#section-8-9">8.9 降级路径</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-9">九、免责声明与内容合规边界</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-9-1">9.1 责任定位</a></li>
+<li class="toc-l2"><a href="#section-9-2">9.2 免责声明文案</a></li>
+<li class="toc-l2"><a href="#section-9-3">9.3 地图与内容合规</a></li>
+<li class="toc-l2"><a href="#section-9-4">9.4 个人信息与位置</a></li>
+<li class="toc-l2"><a href="#section-9-5">9.5 数据授权合规</a></li>
+<li class="toc-l2"><a href="#section-9-6">9.6 AI 内容边界</a></li>
+<li class="toc-l2"><a href="#section-9-7">9.7 交易与预约边界</a></li>
+<li class="toc-l2"><a href="#section-9-8">9.8 特殊人群与商业内容</a></li>
+<li class="toc-l2"><a href="#section-9-9">9.9 上线前合规检查清单</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-10">十、技术架构与关键设计</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-10-1">10.1 分层</a></li>
+<li class="toc-l2"><a href="#section-10-2">10.2 核心数据模型</a></li>
+<li class="toc-l2"><a href="#section-10-3">10.3 异步任务</a></li>
+<li class="toc-l2"><a href="#section-10-4">10.4 离线与同步</a></li>
+<li class="toc-l2"><a href="#section-10-5">10.5 降级矩阵</a></li>
+<li class="toc-l2"><a href="#section-10-6">10.6 成本控制</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-11">十一、分阶段开发里程碑</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-11-1">11.1 总览</a></li>
+<li class="toc-l2"><a href="#section-11-2">11.2 M0：验证周</a></li>
+<li class="toc-l2"><a href="#section-11-3">11.3 M1：内容与基础</a></li>
+<li class="toc-l2"><a href="#section-11-4">11.4 M2：行程主流程</a></li>
+<li class="toc-l2"><a href="#section-11-5">11.5 M3：随行与恢复</a></li>
+<li class="toc-l2"><a href="#section-11-6">11.6 M4：内测与修订</a></li>
+<li class="toc-l2"><a href="#section-11-7">11.7 资源换算</a></li>
+<li class="toc-l2"><a href="#section-11-8">11.8 里程碑完成标准</a></li>
+<li class="toc-l2"><a href="#section-11-9">11.9 风险登记册</a></li>
+<li class="toc-l2"><a href="#section-11-10">11.10 指标</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-12">十二、验收标准</a><ol class="toc-sub">
+<li class="toc-l2"><a href="#section-12-1">12.1 功能验收</a></li>
+<li class="toc-l2"><a href="#section-12-2">12.2 黄金场景</a></li>
+<li class="toc-l2"><a href="#section-12-3">12.3 边界用例</a></li>
+<li class="toc-l2"><a href="#section-12-4">12.4 非功能验收</a></li>
+</ol></li>
+<li class="toc-l1"><a href="#section-13">附录 A：关键字段清单</a><ol class="toc-sub">
+</ol></li>
+<li class="toc-l1"><a href="#section-14">附录 B：参考与说明</a><ol class="toc-sub">
+</ol></li>
+  </ol>
+</nav>
+</section>
+
+<section role="body" class="report-body" data-page-restart="1">
+
+<div class="executive-summary">
+  <p class="summary-title">内容提要</p>
+  <table class="summary-metrics">
+    <thead>
+      <tr><th>试点城市</th><th>行程长度</th><th>首版 P0 功能</th><th>开发周期</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1 座</td><td>1—5 天</td><td>14 项</td><td>8—10 周</td></tr>
+    </tbody>
+  </table>
+  <p class="summary-text">这份规划把“按城市推荐路线、生成日程”的初始想法，收敛为一个可执行的命题：让用户在一座城市完成从发现地点到途中调整的完整闭环。首版刻意放弃交易、社区与多城联程，把资源集中在内容时效、排程可信与编辑顺畅三件事上。判断成败的标准不是功能多少，而是用户是否真的照着这份日程走完了一趟旅行。</p>
+</div>
+
+<h2 id="section-1">一、文档说明</h2>
+<p>本章界定文档的读者、产品定义与首版假设。后续所有设计都建立在 1.3 节的范围假设之上，假设变化时相关章节需要同步修订。</p>
+<h3 id="section-1-1"><span class="h3-mark">▎</span> 1.1 目的与读者</h3>
+<p>本文档把"按城市推荐路线、生成日程、整合景点美食娱乐"这一初始想法，整理为可执行的产品需求，并给出产品规划设计方案。文档面向三类读者：产品与设计负责人据此确定范围与页面；研发负责人据此评估架构与工作量；内容运营负责人据此建立数据与维护流程。</p>
+<p>文档分两层。第二章为需求整理，回答"到底要做什么、为什么这样切"；第三至十二章为规划方案，回答"怎么落地、按什么顺序做、做到什么程度算完成"。</p>
+<h3 id="section-1-2"><span class="h3-mark">▎</span> 1.2 产品定义</h3>
+<p>一句话定义：<strong>为国内城市 1—5 天自由行游客，生成一份路线合理、可随时修改、旅行中能直接用、行程能长期保存的按天日程。</strong></p>
+<p>产品不以"内容更多"取胜，而以"这份日程真的能照着走完"取胜。判断标准很直接：用户拿着手机出门，到了下一个时间点，知道下一站在哪、怎么去、要不要预约。</p>
+<h3 id="section-1-3"><span class="h3-mark">▎</span> 1.3 范围与假设</h3>
+<p>首版按以下假设规划，任何一条变化都会影响排期与架构：</p>
+<table class="grid"><thead><tr><th>维度</th><th>首版假设</th><th>变化后的影响</th></tr></thead><tbody><tr><td>目的地</td><td>国内城市，单城试点</td><td>出境游需重做地图、签证、汇率与合规</td></tr><tr><td>行程长度</td><td>1—5 天自由行</td><td>超过 7 天需引入"主题日"与中途休整</td></tr><tr><td>同行结构</td><td>1—4 人小团体</td><td>大团需车辆、餐饮桌位与分车调度</td></tr><tr><td>平台</td><td>Android 内测优先</td><td>双端并行约增加四成前端工作量</td></tr><tr><td>团队</td><td>2 名全职开发 + 兼职内容</td><td>单人开发按每周 15—20 小时折算</td></tr><tr><td>商业模式</td><td>首版不接入交易</td><td>接入交易需资质、结算与售后体系</td></tr></tbody></table>
+<h3 id="section-1-4"><span class="h3-mark">▎</span> 1.4 术语表</h3>
+<table class="grid"><thead><tr><th>术语</th><th>含义</th></tr></thead><tbody><tr><td>地点</td><td>可被安排的实体，包括景点、餐厅、场馆、休息点</td></tr><tr><td>活动</td><td>在特定日期与时段发生的项目，如展览、演出、夜游</td></tr><tr><td>场次</td><td>活动在某一天的具体开始时间与时长</td></tr><tr><td>片区</td><td>地理相邻、可步行或短程接驳的一组地点，是排程的基本单位</td></tr><tr><td>行程</td><td>用户的一次旅行计划，含若干天与每日若干项目</td></tr><tr><td>行程版本</td><td>行程的一次完整快照，用于回溯、分享与冲突处理</td></tr><tr><td>锚点</td><td>不可移动的时间约束，如到达、返程、预约场次</td></tr><tr><td>模板</td><td>人工维护的路线骨架，用于冷启动与质量兜底</td></tr></tbody></table>
+<h2 id="section-2">二、需求整理：从想法到可执行需求</h2>
+<p>本章把初始想法拆成可验收的需求。重点是识别四个缺口：条件采集、可修改性、现场可用性与内容时效，它们共同决定了首版的功能边界。</p>
+<h3 id="section-2-1"><span class="h3-mark">▎</span> 2.1 原始诉求拆解</h3>
+<p>初始想法包含四个诉求，本身是成立的，但只覆盖了"发现"与"建议"，没有覆盖"执行"。</p>
+<table class="grid"><thead><tr><th>原始诉求</th><th>用户真正想要的结果</th><th>首版对应能力</th></tr></thead><tbody><tr><td>按城市发现值得去的地方</td><td>不用翻十篇攻略就知道这座城有什么</td><td>城市页、主题分类、地点详情</td></tr><tr><td>推荐旅游路线</td><td>有一条被验证过、不用自己拼的走法</td><td>路线模板、一键复制为个人行程</td></tr><tr><td>安排每天的时间</td><td>几点出门、几点到、待多久、怎么去</td><td>排程引擎、时间线视图、交通估算</td></tr><tr><td>推荐景点美食娱乐</td><td>吃和玩都被安排在合适的位置</td><td>餐段插入、娱乐场次匹配、备选替换</td></tr></tbody></table>
+<p>四个诉求合起来，得到的是一份"建议"。用户真正需要的是"决定"：明天早上九点，我该出门去哪。这中间缺的是约束、可修改性与现场可用性。</p>
+<h3 id="section-2-2"><span class="h3-mark">▎</span> 2.2 四个必须补齐的缺口</h3>
+<p><strong>缺口一：旅行条件没有被采集。</strong> 同样是两天，周六早上到和周六下午到，第一天能安排的内容差一个量级。住宿区域决定每天从哪出发、回哪结束；返程时间决定最后一天能放多少东西。没有这些条件，生成的日程只能算示意。</p>
+<p><strong>缺口二：行程不能被修改。</strong> 用户一定会改。改的原因有两类：一是偏好变化（不想去了），二是原计划不合理（太赶、太远、关门了）。产品如果没有编辑能力，第一次不合适就意味着弃用。</p>
+<p><strong>缺口三：旅行中无法使用。</strong> 攻略类产品的失效点集中在路上：找不到下一站、不知道还有多久、临时下雨。首版必须有一个"今天"页面，把"下一步做什么"压缩到一屏之内。</p>
+<p><strong>缺口四：内容会过期。</strong> 营业时间、门票、预约规则、场次都在变。没有来源、更新时间与复核机制的行程，会在某一天突然把用户送到关门的景区门口。这一条决定产品能否长期运营，而不是能否上线。</p>
+<h3 id="section-2-3"><span class="h3-mark">▎</span> 2.3 需求分层</h3>
+<p>把需求拆成三层，避免"功能列表"式的堆砌：</p>
+<table class="grid"><thead><tr><th>层级</th><th>内容</th><th>判断标准</th></tr></thead><tbody><tr><td>目标层</td><td>让用户完成一趟旅行，而不只是看到一份攻略</td><td>用户是否真的按计划走完</td></tr><tr><td>能力层</td><td>内容组织、条件采集、排程、编辑、随行、保存同步</td><td>每项能力是否可独立验收</td></tr><tr><td>功能层</td><td>具体页面与交互</td><td>是否服务于某项能力</td></tr></tbody></table>
+<p class="callout">&nbsp;&nbsp;目标层只有一句话：<strong>把"做攻略"这件事从用户身上转移到系统身上，并且结果可被用户改动。</strong></p>
+<h3 id="section-2-4"><span class="h3-mark">▎</span> 2.4 首版边界</h3>
+<p>首版明确做：单城、1—5 天、Android、内容以自有与授权为主、排程以模板加规则为主、账号一种登录方式、分享只读快照。</p>
+<p>首版明确不做，并在产品内不给出入口：机酒交易闭环、短视频社区、陌生人拼团、自动预约与代付、实时排队预测、出境游、跨城市联程。</p>
+<p>边界之外的功能不是不重要，而是会同时拉高供给、运营与合规成本。首版只要把"一座城、一趟旅行"做扎实，后续扩展才有基础。</p>
+<h3 id="section-2-5"><span class="h3-mark">▎</span> 2.5 待验证假设</h3>
+<p>以下假设尚未验证，建议在第一周用访谈与小样本测试确认。假设错了，方案要改。</p>
+<table class="grid"><thead><tr><th>编号</th><th>假设</th><th>验证方式</th><th>若不成立</th></tr></thead><tbody><tr><td>H1</td><td>用户愿意花 3—5 分钟填写旅行条件</td><td>可用性测试，观察完成率</td><td>改为"先出稿、再补条件"</td></tr><tr><td>H2</td><td>用户更在意"少绕路"而非"多打卡"</td><td>访谈排序题</td><td>调整排程权重，提高景点数量</td></tr><tr><td>H3</td><td>行程被修改三次以内仍会被使用</td><td>内测行为数据</td><td>强化模板质量与默认值</td></tr><tr><td>H4</td><td>用户愿意为准确信息等待 10—20 秒生成</td><td>生成耗时与放弃率</td><td>改为模板秒出 + 后台优化</td></tr><tr><td>H5</td><td>单城 100 个左右地点足够支撑 3 天行程</td><td>覆盖率测算</td><td>扩充至 200 个或缩减天数</td></tr></tbody></table>
+<h2 id="section-3">三、目标用户与核心使用场景</h2>
+<p>本章确定首版服务谁、不服务谁，并用具体场景描述产品在真实一天中的使用方式。场景是后续流程与页面设计的依据。</p>
+<h3 id="section-3-1"><span class="h3-mark">▎</span> 3.1 用户分层</h3>
+<p>首版聚焦三类核心用户，两类延展用户只做轻量支持。</p>
+<table class="grid"><thead><tr><th>层级</th><th>用户类型</th><th>核心诉求</th><th>首版策略</th></tr></thead><tbody><tr><td>核心</td><td>首次到访者</td><td>不想漏掉重点，不想走冤枉路</td><td>经典模板 + 明确时间安排</td></tr><tr><td>核心</td><td>周末短途客</td><td>时间硬、只有 1—2 天</td><td>高密度片区组合，交通最省</td></tr><tr><td>核心</td><td>小团体同行者</td><td>要兼顾两个人偏好，要能一起看</td><td>偏好合并、只读分享</td></tr><tr><td>延展</td><td>亲子与长者同行</td><td>节奏慢、要休息、要少走路</td><td>通过节奏与步行强度选项支持</td></tr><tr><td>延展</td><td>本地探索者</td><td>同城周末找新鲜去处</td><td>第二版开放"附近"入口</td></tr></tbody></table>
+<h3 id="section-3-2"><span class="h3-mark">▎</span> 3.2 用户画像</h3>
+<p><strong>画像一：效率优先的周末出行者。</strong> 林晓，26 岁，互联网运营，和男友去成都玩两天。她的决策逻辑是"别浪费周末"：不想排队两小时，不想在两个景点之间坐一小时地铁。她会在高铁上订行程，需要十五分钟内拿到结果，并且能在路上改。她的放弃信号是"生成的安排明显不合理"，比如把两个相距很远的点排在一个下午。</p>
+<p><strong>画像二：带家人出行的决策者。</strong> 陈默，34 岁，带 6 岁孩子和父母去西安四天。他要的是"不出错"：中午要有正经吃饭的地方，下午要能回酒店休息，老人走不动时要能换掉下一站。他对信息准确性极敏感，一次"到了发现闭馆"就会让他不再使用。</p>
+<p><strong>画像三：预算敏感的单人行。</strong> 周雨，22 岁，大学生，一个人去重庆三天。她愿意接受推荐，但要有替代选项；她关心门票和餐饮花费，也关心"这个地方值不值得去"。她会因为一句"为什么推荐这里"而建立信任。</p>
+<h3 id="section-3-3"><span class="h3-mark">▎</span> 3.3 核心使用场景</h3>
+<p><strong>场景一：临时决定的周末出行。</strong> 周四晚上十点，林晓决定周末去成都。她打开应用，选城市、选两天、选"轻松"，跳过住宿只填了预计区域，十五秒后拿到初稿。她把其中一晚的餐厅换成火锅，保存，分享给男友。</p>
+<p><strong>场景二：出发前的最后确认。</strong> 出发前一晚，陈默打开行程，看到系统提示"明天上午的博物馆需提前预约，当前未预约"，并附官方入口。他完成预约，把该场次标记为已预约，行程自动锁定该时段。系统同时提示第三天有雨，建议把户外段与室内段对调。</p>
+<p><strong>场景三：旅行中的第一次改动。</strong> 第一天上午十一点，排队比预期久。林晓点"跳过这一站"，系统保留已完成记录，从当前位置与当前时间重算剩余安排，给出两个替代点，并显示"下午的展馆将晚到 20 分钟，仍在最晚入场时间内"。她确认，生成新版本。</p>
+<p><strong>场景四：天气突变。</strong> 下午三点开始下雨。她点"剩余行程改为室内"，系统只调整未执行部分，把两小时户外段替换为附近室内展馆与咖啡馆，同时提示"晚餐预订时间不变"。</p>
+<p><strong>场景五：回程后的沉淀。</strong> 高铁上，周雨翻看已完成记录，标了三处喜欢的地点，把行程复制成"下次参考"，并导出只读链接发给朋友。她删掉了包含酒店信息的旧版本。</p>
+<p><strong>场景六：弱网与断网。</strong> 景区信号差，应用仍能打开已保存行程、查看备注、勾选完成；导航跳转到本机地图应用；恢复网络后草稿自动同步，若另一台设备已修改，提示比较而不是直接覆盖。</p>
+<h3 id="section-3-4"><span class="h3-mark">▎</span> 3.4 关键时刻与体验风险</h3>
+<p>用户对产品的判断集中在三个时刻，任何一个失败都会导致流失：</p>
+<table class="grid"><thead><tr><th>关键时刻</th><th>用户心理</th><th>设计应对</th></tr></thead><tbody><tr><td>第一次看到行程</td><td>"这安排像人做的吗"</td><td>每天两个主活动起步，交通时间显式可见</td></tr><tr><td>抵达当天下午</td><td>"现在该干什么"</td><td>首页直达"今天"，下一站与倒计时置顶</td></tr><tr><td>第一次需要改计划</td><td>"改起来麻烦吗"</td><td>一跳内完成替换，改动即时可见影响</td></tr></tbody></table>
+<p>体验风险按严重度排序：把闭馆地点排进去（致命）、交通时间明显失真（严重）、修改后地图与列表不一致（严重）、生成等待过长无反馈（中等）、分享泄露住宿信息（致命，属合规问题）。</p>
+<h3 id="section-3-5"><span class="h3-mark">▎</span> 3.5 非目标用户</h3>
+<p>跟团游与包车定制用户、商务差旅用户、以交易为目的的用户、需要无障碍设施精确承诺的用户，均不在首版服务范围。对最后一类，产品可以提供"步行强度"与"休息频率"选项，但不对电梯、坡道、无障碍卫生间做推断性描述。</p>
+<h2 id="section-4">四、核心功能清单与优先级</h2>
+<p>本章给出功能全景与优先级判断。P0 的取舍标准只有一条：缺少它，用户无法完成一趟旅行。</p>
+<h3 id="section-4-1"><span class="h3-mark">▎</span> 4.1 功能地图</h3>
+<p>功能按六个域组织：内容、生成、编辑、随行、账户、运营。每个域都有独立的验收标准，避免"整体做完了但没法验"。</p>
+<h3 id="section-4-2"><span class="h3-mark">▎</span> 4.2 P0 功能（首版必须）</h3>
+<table class="grid"><thead><tr><th>模块</th><th>功能</th><th>完成标准</th></tr></thead><tbody><tr><td>城市内容</td><td>城市切换、分类浏览、搜索、筛选</td><td>能在三次点击内找到目标地点并加入行程</td></tr><tr><td>地点详情</td><td>地址、介绍、建议停留、开放信息、费用、预约入口</td><td>关键字段带来源与更新时间，未知项显式标注</td></tr><tr><td>路线模板</td><td>经典、轻松、美食等主题</td><td>可复制为个人行程并独立修改，不影响模板</td></tr><tr><td>行程创建</td><td>三步向导采集条件</td><td>必填项可跳过，跳过项在结果中标注假设</td></tr><tr><td>行程生成</td><td>按时间、偏好、住宿、锚点排程</td><td>不违反已知约束，排不下有原因说明</td></tr><tr><td>行程详情</td><td>时间线与地图同源展示</td><td>任一视图修改后另一视图立即一致</td></tr><tr><td>行程编辑</td><td>增、删、换序、换日、替换、锁定时长</td><td>每次修改触发交通与时间复检</td></tr><tr><td>冲突处理</td><td>识别闭馆、超时、赶不上预约</td><td>给出换序、换日、替换三类建议</td></tr><tr><td>今天页</td><td>下一站、倒计时、导航、完成、跳过</td><td>从打开到发起导航不超过两次点击</td></tr><tr><td>账号与保存</td><td>游客可用、一种登录、云同步</td><td>重启后数据仍在，冲突不静默覆盖</td></tr><tr><td>版本管理</td><td>自动版本、手动命名、回溯</td><td>可查看最近十个版本并恢复</td></tr><tr><td>收藏</td><td>按城市与类别收藏</td><td>可批量加入行程</td></tr><tr><td>分享</td><td>只读快照、有效期、撤销</td><td>服务端完成脱敏，撤销后链接立即失效</td></tr><tr><td>内容后台</td><td>地点维护、模板维护、上下架、报错处理</td><td>运营无需研发介入即可修正信息</td></tr></tbody></table>
+<h3 id="section-4-3"><span class="h3-mark">▎</span> 4.3 P1 功能（核心稳定后）</h3>
+<table class="grid"><thead><tr><th>功能</th><th>进入条件</th><th>价值</th></tr></thead><tbody><tr><td>天气联动调整</td><td>行程可行率稳定在阈值以上</td><td>降低现场改计划的成本</td></tr><tr><td>自然语言改行程</td><td>规则排程已稳定，AI 仅作入口</td><td>降低修改门槛</td></tr><tr><td>预约与出发提醒</td><td>账号与通知权限打通</td><td>减少"忘了预约"类失败</td></tr><tr><td>费用记录</td><td>行程结构稳定</td><td>支撑预算复盘</td></tr><tr><td>同行协作</td><td>已验证真实协作需求</td><td>提升分享转化</td></tr><tr><td>离线包</td><td>确认地图与图片授权范围</td><td>应对弱网与出境前场景</td></tr></tbody></table>
+<h3 id="section-4-4"><span class="h3-mark">▎</span> 4.4 P2 功能（条件成熟后）</h3>
+<p>多城市联程、票务与商户合作、细分人群适配（亲子、无障碍）、UGC 攻略与评价、排队与拥挤预测。这些功能共同的前提是内容与运营能力跟得上，否则上线即负债。</p>
+<h3 id="section-4-5"><span class="h3-mark">▎</span> 4.5 明确不做</h3>
+<table class="grid"><thead><tr><th>功能</th><th>不做的原因</th></tr></thead><tbody><tr><td>机酒交易闭环</td><td>需要资质、结算、退改与客服体系</td></tr><tr><td>短视频社区</td><td>内容审核与推荐成本高，与核心价值无关</td></tr><tr><td>陌生人拼团</td><td>安全责任与匹配机制复杂</td></tr><tr><td>自动预约与代付</td><td>涉及第三方账号与资金，风险不可控</td></tr><tr><td>实时排队预测</td><td>缺乏可靠数据源，承诺即风险</td></tr><tr><td>出境游</td><td>地图、签证、汇率、合规全部需重建</td></tr></tbody></table>
+<h3 id="section-4-6"><span class="h3-mark">▎</span> 4.6 依赖关键路径</h3>
+<p>首版真正的关键路径不是页面数量，而是三件事的先后：<strong>内容可用 → 排程可信 → 编辑顺畅</strong>。内容不齐，排程无从谈起；排程不可信，编辑只是在修补错误；编辑不顺畅，随行页没有意义。</p>
+<p>因此开发顺序必须是：内容与数据结构 → 排程引擎 → 编辑与冲突 → 今天页与同步。倒过来做，会在联调阶段返工。</p>
+<h2 id="section-5">五、关键用户流程</h2>
+<p>本章描述六条主流程及其异常分支。每条流程都对应明确的系统行为与用户可见反馈，可直接转为交互稿与测试用例。</p>
+<h3 id="section-5-1"><span class="h3-mark">▎</span> 5.1 主流程</h3>
+<p><strong>选择城市 → 填写条件 → 生成行程 → 调整确认 → 当天使用 → 保存与分享。</strong></p>
+<p>六个步骤对应六个可测量节点：进入城市页、完成条件填写、生成成功、首次保存、旅行中使用今天页、产生分享或复用。每个节点都是转化漏斗的一环，缺一环就说明该环节设计有问题。</p>
+<h3 id="section-5-2"><span class="h3-mark">▎</span> 5.2 流程 A：首次创建行程</h3>
+<p>触发：用户在城市页点击"为我安排"。</p>
+<p>主路径：</p>
+<ol class="list"><li>第一步选日期或天数、选节奏（轻松 / 标准 / 紧凑）。</li><li>第二步填到达时间、离开时间、到达站点、住宿区域、市内交通偏好。</li><li>第三步选兴趣标签、预算区间、必去地点与已预约项目。</li><li>点击生成，展示进度与预计耗时，可离开页面，完成后通知。</li><li>进入结果页，顶部显示"本次安排采用的假设"，如"按市中心住宿估算，未含往返大交通"。</li><li>用户可直接保存，或进入编辑。</li></ol>
+<p>分支与异常：</p>
+<table class="grid"><thead><tr><th>情况</th><th>处理</th></tr></thead><tbody><tr><td>住宿未定</td><td>允许选择预计区域，结果页标注假设，后续可重算</td></tr><tr><td>日期未定</td><td>生成示意行程，标注"日期确定后需核对开放与场次"</td></tr><tr><td>必去点排不进</td><td>结果页单列"未能安排"，给出原因与替代日期</td></tr><tr><td>生成失败</td><td>保留已填条件，提供"用模板快速生成"降级入口</td></tr><tr><td>重复提交</td><td>以幂等键去重，返回同一任务结果</td></tr></tbody></table>
+<h3 id="section-5-3"><span class="h3-mark">▎</span> 5.3 流程 B：编辑与冲突处理</h3>
+<p>触发：用户在行程详情页拖动、删除或替换项目。</p>
+<p>主路径：</p>
+<ol class="list"><li>用户拖动某项目到下午。</li><li>客户端本地即时预演，显示预计到达时间变化。</li><li>服务端复检：开放时间、最晚入场、场次、交通耗时、返程余量。</li><li>若冲突，弹出说明与三个选项：换序、换日、替换为附近同类地点。</li><li>用户选择后生成新版本，版本号递增，旧版本保留。</li><li>顶部出现"已保存"状态，弱网时显示"本地草稿待同步"。</li></ol>
+<p>设计要点：<strong>冲突提示必须说明后果，而不是只报错。</strong> "此安排将在 17:40 到达，该馆 17:00 停止入场"比"时间冲突"有用得多。</p>
+<p>撤销：支持撤销上一步，保留最近二十步操作；跨天移动视为一步。</p>
+<h3 id="section-5-4"><span class="h3-mark">▎</span> 5.4 流程 C：旅行中的局部调整</h3>
+<p>触发：用户在"今天"页点击"跳过""换一站"或"剩余改为室内"。</p>
+<p>主路径：</p>
+<ol class="list"><li>系统读取当前时间、用户确认的位置、已完成与已跳过记录。</li><li>锁定不可动项：已预约场次、返程余量、已完成项目。</li><li>仅对未执行部分重排，已完成记录不改写。</li><li>生成候选方案，展示新旧差异：总时长、总交通、费用变化。</li><li>用户确认后写入新版本；取消则保留原计划。</li></ol>
+<p class="callout">&nbsp;&nbsp;关键约束：<strong>不得自动改签或取消用户预约。</strong> 若新方案赶不上预约，只提示"当前安排将错过 14:00 场次，请自行联系场馆处理"。</p>
+<h3 id="section-5-5"><span class="h3-mark">▎</span> 5.5 流程 D：保存、分享与复用</h3>
+<p>保存：自动保存 + 显式"保存为新版本"。自动保存每 30 秒或每次结构性修改触发一次，避免用户误以为已保存。</p>
+<p>分享：生成只读快照，包含行程结构与推荐理由，不包含私人备注、票号、精确住宿坐标。快照有有效期，可随时撤销，撤销后链接立即失效。</p>
+<p>复用：任意历史行程可"复制为新行程"，复制时提示"将按新日期重新核对开放与场次"，不直接沿用旧时间。</p>
+<h3 id="section-5-6"><span class="h3-mark">▎</span> 5.6 流程 E：异常与降级</h3>
+<table class="grid"><thead><tr><th>异常</th><th>用户可见表现</th><th>系统行为</th></tr></thead><tbody><tr><td>地图服务超时</td><td>交通时间显示"待确认"</td><td>用片区直线距离与默认速度估算并标注</td></tr><tr><td>天气接口不可用</td><td>不显示天气模块</td><td>隐藏而非显示错误值</td></tr><tr><td>AI 服务超时</td><td>提示"本次使用规则生成"</td><td>回落模板与规则引擎</td></tr><tr><td>保存失败</td><td>顶部提示"已存本地，待同步"</td><td>草稿入本地队列，恢复后重试</td></tr><tr><td>多端冲突</td><td>弹窗对比两个版本</td><td>保留双方草稿，要求用户选择或合并</td></tr><tr><td>临时闭馆</td><td>行程项标红并给替代</td><td>触发局部重排建议，不自动替换</td></tr></tbody></table>
+<h3 id="section-5-7"><span class="h3-mark">▎</span> 5.7 埋点与观测</h3>
+<p>必埋节点：城市页进入、条件填写完成率（分步骤）、生成请求与成功、生成时长、首次保存、编辑次数与类型、冲突触发与解决方式、今天页打开、导航点击、完成与跳过、分享生成与访问、内容报错提交。</p>
+<p>指标口径要在开发前定死，否则内测阶段拿不到可用数据。</p>
+<h2 id="section-6">六、信息架构与主要页面规划</h2>
+<p>本章确定导航结构、页面清单与三个核心页面的信息层级。页面规划遵循“一屏一决策”，避免把攻略全文搬进手机。</p>
+<h3 id="section-6-1"><span class="h3-mark">▎</span> 6.1 信息架构</h3>
+<pre class="tree">城市自由行 App
+├── 探索
+│   ├── 城市列表 / 搜索
+│   ├── 城市详情
+│   │   ├── 主题路线（经典 / 轻松 / 美食 / 夜游）
+│   │   ├── 分类（景点 / 美食 / 娱乐 / 休息）
+│   │   └── 片区导览
+│   └── 地点详情
+├── 行程
+│   ├── 行程列表（进行中 / 未来 / 历史）
+│   ├── 创建行程（三步）
+│   ├── 行程详情（按天）
+│   │   ├── 时间线视图
+│   │   ├── 地图视图
+│   │   └── 版本与分享
+│   └── 今天
+├── 收藏
+│   ├── 按城市
+│   └── 按类别
+└── 我的
+    ├── 账号与同步
+    ├── 偏好设置
+    ├── 历史与数据管理
+    └── 帮助、反馈、协议与隐私</pre>
+<h3 id="section-6-2"><span class="h3-mark">▎</span> 6.2 导航结构</h3>
+<p>底部四个标签：<strong>探索｜行程｜收藏｜我的</strong>。选择依据是主流程：探索负责"找"，行程负责"排与用"，收藏负责"存着以后用"，我的负责"账户与数据"。</p>
+<p>"今天"不占底部标签，而是行程内的置顶入口，并在旅行当天提升为行程页默认打开项。理由是它只在特定时间窗内高频，长期占位会稀释导航。</p>
+<h3 id="section-6-3"><span class="h3-mark">▎</span> 6.3 页面清单</h3>
+<table class="grid"><thead><tr><th>编号</th><th>页面</th><th>优先级</th><th>核心任务</th></tr></thead><tbody><tr><td>P01</td><td>城市列表与搜索</td><td>P0</td><td>找到城市</td></tr><tr><td>P02</td><td>城市详情</td><td>P0</td><td>了解这座城市怎么玩</td></tr><tr><td>P03</td><td>分类与筛选</td><td>P0</td><td>按兴趣筛地点</td></tr><tr><td>P04</td><td>地点详情</td><td>P0</td><td>判断值不值得去、怎么去</td></tr><tr><td>P05</td><td>路线模板详情</td><td>P0</td><td>判断是否套用</td></tr><tr><td>P06</td><td>创建行程·条件</td><td>P0</td><td>采集约束</td></tr><tr><td>P07</td><td>创建行程·偏好</td><td>P0</td><td>采集兴趣与预算</td></tr><tr><td>P08</td><td>生成中与结果预览</td><td>P0</td><td>等待与初判</td></tr><tr><td>P09</td><td>行程详情</td><td>P0</td><td>查看与调整</td></tr><tr><td>P10</td><td>编辑与冲突提示</td><td>P0</td><td>完成修改</td></tr><tr><td>P11</td><td>今天</td><td>P0</td><td>现场执行</td></tr><tr><td>P12</td><td>行程列表</td><td>P0</td><td>找到历史行程</td></tr><tr><td>P13</td><td>版本历史</td><td>P1</td><td>回溯与恢复</td></tr><tr><td>P14</td><td>分享设置与预览</td><td>P0</td><td>安全分享</td></tr><tr><td>P15</td><td>收藏</td><td>P0</td><td>沉淀地点</td></tr><tr><td>P16</td><td>我的与设置</td><td>P0</td><td>账户与数据管理</td></tr><tr><td>P17</td><td>偏好设置</td><td>P1</td><td>长期个性化</td></tr><tr><td>P18</td><td>帮助与反馈</td><td>P0</td><td>报错与求助</td></tr></tbody></table>
+<h3 id="section-6-4"><span class="h3-mark">▎</span> 6.4 页面一：创建行程</h3>
+<p>分三步，每步一屏，可回退，可跳过非必填。</p>
+<p>第一步：城市已选，填日期或天数、节奏。节奏用三段控件表示，配一句解释："轻松：每天两个主要活动，晚上可自由安排。"</p>
+<p>第二步：到达与离开时间、站点、住宿区域、市内交通偏好。住宿未定时提供"我还没定"选项，选中后展示预计区域选择。</p>
+<p>第三步：兴趣标签（最多选五个）、预算区间、必去地点、已预约项目。已预约项要求填日期与时间，系统据此锁定。</p>
+<p>底部常驻主按钮"生成行程"，并显示"预计 15 秒"。生成过程展示三行进度文案，而非单调的转圈。</p>
+<h3 id="section-6-5"><span class="h3-mark">▎</span> 6.5 页面二：行程详情（核心页面）</h3>
+<p>信息层级自上而下：</p>
+<ol class="list"><li><strong>状态条</strong>：城市、日期范围、保存状态、分享入口。</li><li><strong>日期切换</strong>：第一天、第二天，横向滑动，显示每日主要活动数。</li><li><strong>当日概览</strong>：主要活动数、交通总耗时、步行估算、费用区间、结束时间。</li><li><strong>视图切换</strong>：时间线 / 地图。两者引用同一份数据。</li><li><strong>时间线</strong>：按时间顺序排列行程卡，卡间显示交通段。</li><li><strong>底部操作</strong>：添加地点、调整剩余、保存版本。</li></ol>
+<p>单张行程卡包含：预计到达时间、地点名、建议停留时长、一句推荐理由、预约状态、下一段交通方式与耗时、"换一个"入口。</p>
+<p class="callout">&nbsp;&nbsp;设计红线：地图与时间线必须同源。用户改了列表顺序，地图上的连线若仍是旧路径，会直接摧毁信任。</p>
+<h3 id="section-6-6"><span class="h3-mark">▎</span> 6.6 页面三：今天</h3>
+<p>目标是在三十秒内回答"我现在该干什么"。</p>
+<p>首屏只放四块内容：</p>
+<ol class="list"><li><strong>下一站卡片</strong>：地点名、预计到达时间、距离与交通方式。</li><li><strong>倒计时</strong>：若下一项是固定预约，显示"距 14:00 场次还有 1 小时 20 分"。</li><li><strong>三个动作</strong>：导航、完成、跳过。次要动作"换一站"放在卡片内。</li><li><strong>今日剩余</strong>：折叠列表，显示后续两到三项。</li></ol>
+<p>不放的内容：完整攻略文本、大段介绍、推荐理由长文。旅行中用户没有阅读耐心。</p>
+<h3 id="section-6-7"><span class="h3-mark">▎</span> 6.7 页面状态设计</h3>
+<p>每个核心页面必须定义六种状态，否则开发阶段会各自发挥：</p>
+<table class="grid"><thead><tr><th>状态</th><th>设计要求</th></tr></thead><tbody><tr><td>空态</td><td>说明为什么空，给一个明确下一步动作</td></tr><tr><td>加载态</td><td>骨架屏，超过三秒显示文字进度</td></tr><tr><td>生成中</td><td>可离开，完成后通知，不阻塞其他操作</td></tr><tr><td>失败态</td><td>说明原因，给一个可执行的替代方案</td></tr><tr><td>离线态</td><td>顶部横条提示，已保存内容可读，标注"数据可能不是最新"</td></tr><tr><td>冲突态</td><td>双版本对比，逐项选择，不做静默合并</td></tr></tbody></table>
+<h3 id="section-6-8"><span class="h3-mark">▎</span> 6.8 体验原则</h3>
+<p><strong>一屏一决策。</strong> 每个页面只让用户做一个主要决定，其余动作降级为次要入口。</p>
+<p><strong>信息可追溯。</strong> 任何关键字段（营业时间、票价、预约要求）都能看到来源与更新时间。</p>
+<p><strong>未知要显式。</strong> 缺失信息显示"待确认"，绝不用默认值填充成看似确定的事实。</p>
+<p><strong>改动即时可见。</strong> 任何调整在半秒内给出视觉反馈，长耗时操作先本地预演再服务端确认。</p>
+<h2 id="section-7">七、数据来源与更新策略</h2>
+<p>本章回答三个问题：数据从哪来、多久更新一次、能用到什么程度。内容时效性直接决定行程在现场是否可执行。</p>
+<h3 id="section-7-1"><span class="h3-mark">▎</span> 7.1 数据分层</h3>
+<p>数据分四层，权限与生命周期各不相同：</p>
+<table class="grid"><thead><tr><th>层级</th><th>内容</th><th>权限特征</th><th>生命周期</th></tr></thead><tbody><tr><td>L1 自有内容</td><td>城市介绍、片区划分、主题路线、推荐理由</td><td>完全可控，可长期保存</td><td>长期资产</td></tr><tr><td>L2 授权内容</td><td>景区与场馆官方信息、授权图片</td><td>按授权范围使用</td><td>授权期内</td></tr><tr><td>L3 接口数据</td><td>地图检索、路径规划、天气</td><td>按服务协议调用与缓存</td><td>短周期</td></tr><tr><td>L4 用户贡献</td><td>报错、备注、评价</td><td>需授权与审核</td><td>依用户协议</td></tr></tbody></table>
+<p>分层的目的不是分类好看，而是回答一个具体问题：<strong>这条数据能不能进数据库、能不能进离线包、能不能进分享快照、能不能发给模型。</strong> 四层数据在这四个问题上的答案不同。</p>
+<h3 id="section-7-2"><span class="h3-mark">▎</span> 7.2 数据源矩阵</h3>
+<table class="grid"><thead><tr><th>数据项</th><th>建议来源</th><th>使用方式</th><th>风险</th></tr></thead><tbody><tr><td>城市与片区介绍</td><td>自行编辑、授权内容</td><td>入库，长期保存</td><td>人力成本</td></tr><tr><td>地点基础信息</td><td>地图开放平台检索</td><td>取必要字段，映射内部 ID</td><td>字段不全、授权限制</td></tr><tr><td>营业时间与预约</td><td>官方渠道、合作方</td><td>人工核实后入库</td><td>更新不及时</td></tr><tr><td>交通耗时</td><td>地图路径规划接口</td><td>实时查询 + 短缓存</td><td>配额与费用</td></tr><tr><td>活动场次</td><td>场馆官方、票务合作</td><td>有接口用接口，无接口人工维护</td><td>场次变动频繁</td></tr><tr><td>天气</td><td>天气服务接口</td><td>按预报窗口展示</td><td>预报范围有限</td></tr><tr><td>图片</td><td>自拍、授权、用户授权</td><td>按许可展示并标注</td><td>版权风险</td></tr></tbody></table>
+<h3 id="section-7-3"><span class="h3-mark">▎</span> 7.3 时效与更新策略</h3>
+<p>不同字段的更新频率差别很大，统一"每周更新"既不现实也不必要。建议按 TTL 分级：</p>
+<table class="grid"><thead><tr><th>字段</th><th>TTL</th><th>过期处理</th></tr></thead><tbody><tr><td>城市介绍、路线模板</td><td>90 天</td><td>标记待复核，仍展示</td></tr><tr><td>地点地址、类别、坐标</td><td>30 天</td><td>后台提醒复核</td></tr><tr><td>营业时间、最晚入场</td><td>7 天（重点场馆 3 天）</td><td>降级为"待确认"，不参与硬约束判断</td></tr><tr><td>门票价格</td><td>14 天</td><td>显示"价格可能变动"</td></tr><tr><td>活动场次</td><td>24 小时或实时</td><td>过期即从可排池移除</td></tr><tr><td>交通耗时</td><td>30 分钟（高峰/平峰分开缓存）</td><td>重新查询，失败则标注估算</td></tr><tr><td>天气</td><td>按供应商窗口，出发前 72 小时加密刷新</td><td>范围外显示"出发前更新"</td></tr></tbody></table>
+<p>过期不等于删除。过期数据的正确做法是降级展示并降低其在排程中的权重，而不是直接消失，否则用户会觉得信息莫名其妙不见了。</p>
+<h3 id="section-7-4"><span class="h3-mark">▎</span> 7.4 数据质量规则</h3>
+<p><strong>三态模型。</strong> 每个关键字段只有三种状态：已确认、待核实、已关闭。禁止出现"空值当作无限制"的隐式假设。</p>
+<p><strong>来源优先级。</strong> 冲突时按 官方渠道 → 授权合作方 → 地图接口 → 用户报错 仲裁。用户报错必须二次核实才能覆盖官方信息。</p>
+<p><strong>置信度门槛。</strong> 关键字段置信度低于阈值的候选地点，不进入主推荐，只作为备选并标注"信息待确认"。</p>
+<p><strong>一致性检查。</strong> 排程前强制校验：坐标是否在城市范围内、开放时间是否与场次矛盾、停留时长是否超过营业窗口、地点是否被下架。</p>
+<h3 id="section-7-5"><span class="h3-mark">▎</span> 7.5 授权与使用边界</h3>
+<p>接口可以调用，不等于返回内容可以任意保存与再分发。接入前必须逐项确认五个问题：</p>
+<table class="grid"><thead><tr><th>问题</th><th>影响的设计决策</th></tr></thead><tbody><tr><td>是否允许长期存储</td><td>决定能否建自有地点库</td></tr><tr><td>是否允许缓存</td><td>决定离线能力与响应速度</td></tr><tr><td>是否允许在分享页展示</td><td>决定分享快照可用字段</td></tr><tr><td>是否允许进入模型请求</td><td>决定 AI 功能的数据范围</td></tr><tr><td>是否要求展示来源标识</td><td>决定 UI 上的署名位置</td></tr></tbody></table>
+<p>在架构上对应四条硬规则：只存必要字段，不整包镜像第三方数据；内部地点 ID 与供应商 ID 分离，便于更换服务商；每个字段记录来源与更新时间；未获许可的数据不进入离线包、分享快照与模型请求。</p>
+<h3 id="section-7-6"><span class="h3-mark">▎</span> 7.6 内容冷启动</h3>
+<p>首版建议：一座城、四到六个相邻片区、80—150 个地点、8—12 条路线模板。</p>
+<p>结构配比建议：景点约六成，餐饮约三成，娱乐与休息约一成。每个片区至少包含两个室内备选点，用于雨天替换；每个餐段在片区内至少有三个候选，形成"一主选两备选"。</p>
+<p>数量不是目标，可维护性才是。100 个字段完整、每周可复核的地点，胜过 300 个信息残缺的地点。</p>
+<h3 id="section-7-7"><span class="h3-mark">▎</span> 7.7 内容运营流程</h3>
+<pre class="tree">线索收集 → 录入（含来源与截图） → 初审（字段完整性） → 上线
+   ↑                                                    ↓
+   └── 用户报错 ←── 定期复核（按 TTL） ←── 下线 / 修正在线</pre>
+<p>角色分工：内容编辑负责录入与初审，运营负责复核排期与报错闭环，产品负责模板质量抽检。报错响应目标为 24 小时内确认、72 小时内修正或标注。</p>
+<h3 id="section-7-8"><span class="h3-mark">▎</span> 7.8 内容健康度指标</h3>
+<table class="grid"><thead><tr><th>指标</th><th>口径</th><th>目标</th></tr></thead><tbody><tr><td>字段完整率</td><td>关键字段齐全的地点占比</td><td>≥ 90%</td></tr><tr><td>过期率</td><td>超出 TTL 未复核的字段占比</td><td>≤ 10%</td></tr><tr><td>报错闭环时长</td><td>从提交到处理完成的中位数</td><td>≤ 72 小时</td></tr><tr><td>模板使用率</td><td>使用模板创建的行程占比</td><td>≥ 50%</td></tr><tr><td>行程替换率</td><td>单份行程中地点被替换的比例</td><td>观察值，不设硬目标</td></tr><tr><td>冲突发现率</td><td>生成后被判定为不可行的项目占比</td><td>≤ 5%</td></tr></tbody></table>
+<h2 id="section-8">八、个性化推荐逻辑</h2>
+<p>本章把推荐拆成召回、排序、排程三层，并给出首版可实现的算法与参数。目标不是最优解，而是可解释、可校验、可降级。</p>
+<h3 id="section-8-1"><span class="h3-mark">▎</span> 8.1 四层结构</h3>
+<p>推荐系统拆成四层，各层职责不重叠：</p>
+<table class="grid"><thead><tr><th>层</th><th>输入</th><th>输出</th><th>失败影响</th></tr></thead><tbody><tr><td>画像层</td><td>用户填写、行为、情境</td><td>偏好向量与约束</td><td>退化为通用偏好</td></tr><tr><td>召回层</td><td>城市候选池、片区</td><td>50—80 个候选</td><td>退化为模板地点</td></tr><tr><td>排序层</td><td>候选、偏好、时段</td><td>带分数的有序列表</td><td>退化为热度排序</td></tr><tr><td>排程层</td><td>有序候选、时间窗、锚点</td><td>按天行程</td><td>退化为模板行程</td></tr></tbody></table>
+<p class="callout">&nbsp;&nbsp;关键判断：<strong>推荐层解决"去哪"，排程层解决"哪天几点去"。</strong> 两者混在一起做，会导致推荐结果漂亮但排不进日程。</p>
+<h3 id="section-8-2"><span class="h3-mark">▎</span> 8.2 用户偏好模型</h3>
+<p>显式偏好：兴趣标签（历史、自然、美食、拍照、购物、演出、夜生活、亲子）取 0—3 强度；节奏三档；预算区间；步行接受度；饮食禁忌；交通偏好。</p>
+<p>隐式偏好：浏览停留、收藏、加入行程、替换、跳过、完成后评分。隐式信号要衰减，十四天前的行为权重减半。</p>
+<p>情境变量：同行结构（独自、情侣、朋友、带娃、带长辈）、季节与天气、是否首次到访。情境优先于长期偏好，带长辈时"轻松"应覆盖用户平时偏"紧凑"的设定。</p>
+<h3 id="section-8-3"><span class="h3-mark">▎</span> 8.3 候选召回</h3>
+<p>召回按片区进行，而不是全城平铺。理由很实际：跨片区组合会显著抬高交通成本，而用户的耐受度有限。</p>
+<p>召回规则：先按城市与日期筛出可用地点（未下架、未关闭、信息置信度达标）；再按兴趣标签匹配度取前若干；再补足"必去""经典""餐段""室内备选"四类必需项；最后按片区聚合，保证每个片区都有足够候选。</p>
+<p>每类地点设配额下限，避免召回的候选全是网红打卡点。例如餐饮至少覆盖三个价格带，景点至少包含一个免费或低价选项。</p>
+<h3 id="section-8-4"><span class="h3-mark">▎</span> 8.4 排序打分</h3>
+<p>首版采用可解释的线性加权，不做黑盒模型：</p>
+<p><strong>总分 = 0.35×兴趣匹配 + 0.20×片区连贯 + 0.15×时段适配 + 0.10×预算适配 + 0.10×内容丰富度 + 0.10×口碑信号 − 0.10×拥挤风险</strong></p>
+<table class="grid"><thead><tr><th>因子</th><th>计算方式</th><th>说明</th></tr></thead><tbody><tr><td>兴趣匹配</td><td>标签命中强度归一化</td><td>冷启动主要依据</td></tr><tr><td>片区连贯</td><td>与前序地点的距离分档给分</td><td>同片区内优先</td></tr><tr><td>时段适配</td><td>类型与时段匹配（如夜游、餐段）</td><td>避免把夜景排到上午</td></tr><tr><td>预算适配</td><td>费用落在区间内的比例</td><td>超预算降权</td></tr><tr><td>内容丰富度</td><td>字段完整度与图片质量</td><td>信息不全者降权</td></tr><tr><td>口碑信号</td><td>授权范围内的评分或人工评级</td><td>无可靠来源则置零</td></tr><tr><td>拥挤风险</td><td>节假日、热门度、时段</td><td>仅作轻微惩罚</td></tr></tbody></table>
+<p>权重需在真实数据上校准。冷启动阶段宁可权重简单、结果可解释，也不要上复杂模型导致无法定位问题。</p>
+<h3 id="section-8-5"><span class="h3-mark">▎</span> 8.5 排程算法</h3>
+<p>首版采用"锚点固定 + 片区聚类 + 贪心插入 + 局部改进"，不引入通用求解器。</p>
+<p>步骤：</p>
+<ol class="list"><li><strong>固定锚点</strong>：写入到达、离开、返程准备时间、已预约场次、用户锁定项。</li><li><strong>切分时间窗</strong>：按天切出可用时段，扣除交通与缓冲。</li><li><strong>片区聚类</strong>：把候选按地理邻近划为若干簇，形成"一天一片区"的初稿骨架。</li><li><strong>贪心插入</strong>：在每个时间窗内按分数从高到低尝试插入，满足停留时长、交通耗时与缓冲要求。</li><li><strong>插入餐段</strong>：午餐 11:30—13:30、晚餐 17:30—19:30 区间内选取就近餐厅，要求营业时间覆盖预计到店时段。</li><li><strong>插入娱乐</strong>：仅有明确场次的活动按时段插入，冲突则放弃并记入未安排清单。</li><li><strong>局部改进</strong>：用换序、换日、替换三种算子迭代若干轮，目标是最小化总交通时长、最大化兴趣总分、平衡每日强度。</li><li><strong>约束校验</strong>：逐项复检开放时间、最晚入场、场次、返程余量、总预算。</li><li><strong>输出</strong>：主方案、备选方案、未安排清单（附原因）、待确认事项。</li></ol>
+<p>复杂度控制：单日候选控制在 20 个以内，迭代轮数上限固定，保证生成在 15 秒内完成。超过时长的优化收益远小于用户等待成本。</p>
+<h3 id="section-8-6"><span class="h3-mark">▎</span> 8.6 节奏参数</h3>
+<p>"轻松"与"紧凑"必须对应具体参数，不能只是标签：</p>
+<table class="grid"><thead><tr><th>参数</th><th>轻松</th><th>标准</th><th>紧凑</th></tr></thead><tbody><tr><td>每日主要活动</td><td>2</td><td>3</td><td>4</td></tr><tr><td>每日在外时长</td><td>≤ 8 小时</td><td>≤ 10 小时</td><td>≤ 12 小时</td></tr><tr><td>相邻项目最大交通</td><td>30 分钟</td><td>25 分钟</td><td>20 分钟</td></tr><tr><td>每日步行估算上限</td><td>6 公里</td><td>8 公里</td><td>12 公里</td></tr><tr><td>项目间缓冲</td><td>20 分钟</td><td>15 分钟</td><td>10 分钟</td></tr><tr><td>计划结束时间</td><td>20:00</td><td>21:00</td><td>22:00</td></tr><tr><td>晚间活动</td><td>可选</td><td>默认安排</td><td>默认安排</td></tr></tbody></table>
+<p>参数按地点类型修正：大型博物馆按 2.5—3 小时计，拍照点按 30—40 分钟计，不能统一取平均值。</p>
+<h3 id="section-8-7"><span class="h3-mark">▎</span> 8.7 可解释与可控</h3>
+<p>每条安排给一句理由，理由必须来自真实计算，不能套模板话术。四类可用理由：命中偏好（"你选了历史，这里评分最高"）、顺路（"距上一站步行 8 分钟"）、时段合适（"夜游段，19:00 后开放"）、硬约束（"已预约 14:00 场次"）。</p>
+<p>未安排的项目必须给原因，归为六类：时间不足、开放冲突、距离过远、预算超限、偏好不匹配、信息待核实。原因是产品改进的输入，也是用户信任的来源。</p>
+<h3 id="section-8-8"><span class="h3-mark">▎</span> 8.8 反馈闭环与评估</h3>
+<p>行为闭环：替换与跳过作为负反馈，完成与收藏作为正反馈，更新兴趣权重；同类地点连续被跳过三次，自动降低该标签权重。</p>
+<p>离线评估：可行率（生成后无需修正即可保存的比例）、冲突率、平均日交通时长、兴趣命中率、每日强度均衡度。</p>
+<p>在线评估：首次保存率、生成到保存时长、编辑次数分布、今天页使用率、七日行程复用率。</p>
+<p>注意一个反直觉现象：<strong>修改率高不一定是坏事。</strong> 用户愿意改，说明产品给了他表达偏好的空间。真正的问题是"改完仍然不合理"，而不是"改过"。</p>
+<h3 id="section-8-9"><span class="h3-mark">▎</span> 8.9 降级路径</h3>
+<table class="grid"><thead><tr><th>失效环节</th><th>降级方案</th><th>用户可见提示</th></tr></thead><tbody><tr><td>画像缺失</td><td>使用城市通用偏好</td><td>不提示，结果页标注"通用推荐"</td></tr><tr><td>排序服务异常</td><td>按人工评级与热度排序</td><td>无</td></tr><tr><td>地图接口失败</td><td>片区直线距离 × 系数估算</td><td>交通时间标"待确认"</td></tr><tr><td>排程超时</td><td>返回模板行程</td><td>"已为你生成基础方案，可继续调整"</td></tr><tr><td>模型不可用</td><td>仅规则与模板</td><td>隐藏 AI 入口，不显示错误</td></tr></tbody></table>
+<p class="callout">&nbsp;&nbsp;降级的第一原则是<strong>宁可少一个功能，不可给一个错误值</strong>。零分钟交通、假营业时间、无来源票价，都会造成现场失败。</p>
+<h2 id="section-9">九、免责声明与内容合规边界</h2>
+<p>本章界定产品责任边界，并提供可直接使用的免责文案与上线检查清单。合规工作的价值在于提前排除会导致下架的风险。</p>
+<h3 id="section-9-1"><span class="h3-mark">▎</span> 9.1 责任定位</h3>
+<p>产品定位为<strong>旅行信息组织与行程规划工具</strong>，不是旅行社，不提供代订、代付、带队服务，不对第三方场馆的开放、票价、服务质量作出担保。这一定位需在产品文案、用户协议与实际功能三处保持一致，避免"说是工具、做着旅行社的事"。</p>
+<h3 id="section-9-2"><span class="h3-mark">▎</span> 9.2 免责声明文案</h3>
+<p>以下文案可直接用于首版，位置与措辞需经法务确认。</p>
+<p><strong>行程结果页（常驻折叠区）：</strong></p>
+<p class="quote">&nbsp;&nbsp;本行程由系统根据公开资料与你填写的偏好自动生成，仅供参考。景点与场馆的开放时间、门票价格、预约规则、交通耗时可能随时调整，请以官方发布为准。出行前请再次确认预约状态与入场要求。</p>
+<p><strong>地点详情页（信息区底部）：</strong></p>
+<p class="quote">&nbsp;&nbsp;以上信息整理自官方公开渠道，最近更新于 2026-11-01。如与现场公示不一致，以现场为准。欢迎通过"信息有误"反馈，我们会尽快核实。</p>
+<p><strong>分享页（页脚）：</strong></p>
+<p class="quote">&nbsp;&nbsp;本页为行程只读快照，生成于 2026-11-01 20:30，不含实时交通、天气与余票信息。</p>
+<p><strong>AI 生成内容处（标识）：</strong></p>
+<p class="quote">&nbsp;&nbsp;以下内容由 AI 辅助生成，已经规则校验，仅供参考。</p>
+<h3 id="section-9-3"><span class="h3-mark">▎</span> 9.3 地图与内容合规</h3>
+<p>使用具备资质的地图服务，按要求展示审图号与来源标识；不自行绘制、拼接或修改国界与行政区划；不提供境外地图能力。地点描述不出现绝对化用语（"最好""最低价""唯一"），避免违反广告相关要求。</p>
+<p>用户生成内容若开放，需建立通知—删除机制：侵权投诉入口、处理时限、处理记录留档。</p>
+<h3 id="section-9-4"><span class="h3-mark">▎</span> 9.4 个人信息与位置</h3>
+<p>按最小必要原则采集。位置权限分三档：仅使用期间、仅本次、拒绝。拒绝后允许手动选择起点，功能不因此中断。</p>
+<p>行踪轨迹属敏感个人信息，需单独同意，并明确告知用途、范围与保存期限。设计约束：不采集后台连续轨迹；不上传完整历史路径；分享时服务端脱敏，去除精确住宿坐标与私人备注；提供一键删除行程与账号注销。</p>
+<h3 id="section-9-5"><span class="h3-mark">▎</span> 9.5 数据授权合规</h3>
+<p>第三方数据按协议使用，明确存储、缓存、离线、导出、模型处理五项权限。未获许可的数据不进入分享快照与离线包。来源标识与更新时间随字段存储，展示端可见。</p>
+<h3 id="section-9-6"><span class="h3-mark">▎</span> 9.6 AI 内容边界</h3>
+<p>AI 只做五件事：理解偏好、生成修改建议、解释推荐理由、提供替代选项、整理介绍文案。硬约束：AI 返回的地点必须存在于可用候选池；耗时必须来自交通数据或明确标注的估算；开放、票价、余票必须有依据；任何修改先作为候选版本，经用户确认后生效；AI 不可用时全流程仍能走通。</p>
+<p>生成式内容按要求添加标识，且不得以 AI 输出替代官方信息。</p>
+<h3 id="section-9-7"><span class="h3-mark">▎</span> 9.7 交易与预约边界</h3>
+<p>首版不代订、不代付、不承诺余票。预约入口跳转官方渠道，页面明确"预约与支付在场馆官方完成，本应用不参与交易"。若后续接入票务，需另行评估资质、结算、退改与售后责任。</p>
+<h3 id="section-9-8"><span class="h3-mark">▎</span> 9.8 特殊人群与商业内容</h3>
+<p>不对无障碍设施、母婴设施作推断性描述；如展示，须标注来源与核实时间。商业合作内容（推荐、榜单、置顶）需显式标识"广告"或"合作"。</p>
+<h3 id="section-9-9"><span class="h3-mark">▎</span> 9.9 上线前合规检查清单</h3>
+<table class="grid"><thead><tr><th>检查项</th><th>通过标准</th></tr></thead><tbody><tr><td>用户协议与隐私政策</td><td>覆盖采集范围、用途、共享清单、保留期限、注销路径</td></tr><tr><td>敏感个人信息</td><td>位置单独同意，文案与实现一致</td></tr><tr><td>权限申请</td><td>仅在必要时申请，拒绝后有替代路径</td></tr><tr><td>地图合规</td><td>审图号展示、无自绘边界</td></tr><tr><td>第三方数据</td><td>五项权限书面确认，缓存策略与协议一致</td></tr><tr><td>分享脱敏</td><td>服务端完成，抽查十个样本无泄露</td></tr><tr><td>AI 标识</td><td>所有生成内容有标识与免责说明</td></tr><tr><td>广告标识</td><td>合作内容可识别</td></tr><tr><td>内容报错通道</td><td>入口可见，响应有时限</td></tr><tr><td>未成年人</td><td>无针对性诱导消费设计</td></tr></tbody></table>
+<h2 id="section-10">十、技术架构与关键设计</h2>
+<p>本章给出支撑前述功能的架构与数据结构，重点在双 ID、版本控制、异步任务与降级四件事。首版保持单体，模块边界清晰即可。</p>
+<h3 id="section-10-1"><span class="h3-mark">▎</span> 10.1 分层</h3>
+<p>客户端（Flutter 或 Kotlin）→ 接入层（鉴权、限流、日志）→ 领域模块（用户、内容、排程、行程、任务）→ 适配层（地图、天气、模型）→ 存储（PostgreSQL + 对象存储）。</p>
+<p>首版保持单体后端，模块边界清晰即可。微服务、消息队列、向量库在真实压力出现前不引入。</p>
+<h3 id="section-10-2"><span class="h3-mark">▎</span> 10.2 核心数据模型</h3>
+<table class="grid"><thead><tr><th>对象</th><th>关键字段</th><th>说明</th></tr></thead><tbody><tr><td>地点</td><td>内部 ID、供应商 ID、坐标、类别、片区、状态</td><td>双 ID 分离，便于更换数据源</td></tr><tr><td>开放规则</td><td>地点 ID、星期规则、日期例外、最晚入场</td><td>支持节假日例外</td></tr><tr><td>活动与场次</td><td>活动 ID、地点 ID、日期、起止、预约入口</td><td>场馆与活动分开建模</td></tr><tr><td>模板</td><td>主题、天数、适用条件、版本</td><td>模板版本化，避免改动影响历史行程</td></tr><tr><td>行程</td><td>所有者、起止、偏好快照、当前版本号</td><td>偏好快照保证可复现</td></tr><tr><td>行程项</td><td>顺序、日期、时间、停留、锁定、完成状态</td><td>与交通段分离</td></tr><tr><td>交通段</td><td>起终点、方式、耗时、来源、查询时间</td><td>记录来源与时间，便于判断时效</td></tr><tr><td>任务</td><td>类型、状态、幂等键、错误原因</td><td>支持重试与断点恢复</td></tr><tr><td>分享</td><td>版本号、有效期、撤销状态</td><td>快照式，不随原行程变化</td></tr></tbody></table>
+<p class="callout">&nbsp;&nbsp;两条必须从第一天做好的约定：内部 ID 与供应商 ID 分离；保存采用乐观锁版本检查，冲突时保留双方草稿。</p>
+<h3 id="section-10-3"><span class="h3-mark">▎</span> 10.3 异步任务</h3>
+<p>生成与重排耗时较长，采用"提交任务—轮询或推送—取结果"的模式。任务表记录状态、幂等键与错误原因，worker 可重启恢复。用户离开页面不中断任务，完成后通知。</p>
+<h3 id="section-10-4"><span class="h3-mark">▎</span> 10.4 离线与同步</h3>
+<p>本地 SQLite 保存：已保存行程、地点摘要（授权允许范围内）、用户备注、待同步草稿队列。同步采用"本地优先 + 服务端裁决"：本地改动立即生效并排队，联网后按版本号提交，冲突则拉取双版本对比。</p>
+<h3 id="section-10-5"><span class="h3-mark">▎</span> 10.5 降级矩阵</h3>
+<table class="grid"><thead><tr><th>依赖</th><th>失败表现</th><th>降级策略</th></tr></thead><tbody><tr><td>地图路径</td><td>无耗时</td><td>估算 + 标注待确认</td></tr><tr><td>地图检索</td><td>无法搜索</td><td>使用自有地点库</td></tr><tr><td>天气</td><td>无预报</td><td>隐藏模块</td></tr><tr><td>模型</td><td>无响应</td><td>规则与模板</td></tr><tr><td>数据库主库</td><td>写入失败</td><td>只读模式 + 本地草稿</td></tr><tr><td>对象存储</td><td>图片加载失败</td><td>占位图 + 文字信息优先</td></tr></tbody></table>
+<h3 id="section-10-6"><span class="h3-mark">▎</span> 10.6 成本控制</h3>
+<p>主要成本项：地图与天气调用、模型调用、图片存储与带宽、内容维护人力。控制手段：路径查询限制在候选集内而非全量两两组合；结果缓存并区分高峰平峰；生成任务合并去重；图片按需分辨率下发。</p>
+<p>建议单独记录"每份可用行程的外部服务成本"，把失败重试也计入，否则会低估真实成本。</p>
+<h2 id="section-11">十一、分阶段开发里程碑</h2>
+<p>本章把工作量拆成五个阶段，每阶段有明确的出门条件与验收标准。排期按两人全职估算，单人开发需按 11.7 节换算。</p>
+<h3 id="section-11-1"><span class="h3-mark">▎</span> 11.1 总览</h3>
+<p>按 2 名全职开发、兼职内容维护、单城 Android 内测估算 8—10 周。数据授权、应用审核与大规模内容制作另行计算。</p>
+<table class="grid"><thead><tr><th>阶段</th><th>周期</th><th>目标</th><th>交付物</th></tr></thead><tbody><tr><td>M0 验证</td><td>第 1 周</td><td>确认可行性与边界</td><td>城市选定、接口验证报告、数据结构、线框</td></tr><tr><td>M1 内容与基础</td><td>第 2—3 周</td><td>内容能看、能存</td><td>城市页、地点详情、后台、账号、收藏</td></tr><tr><td>M2 行程主流程</td><td>第 4—5 周</td><td>能生成、能改</td><td>创建向导、排程引擎、时间线、编辑、冲突</td></tr><tr><td>M3 随行与恢复</td><td>第 6—7 周</td><td>路上能用、断了能恢复</td><td>今天页、局部重排、分享、离线草稿、同步</td></tr><tr><td>M4 内测与修订</td><td>第 8—10 周</td><td>真实场景跑通</td><td>内测版本、问题清单、内容修订</td></tr></tbody></table>
+<h3 id="section-11-2"><span class="h3-mark">▎</span> 11.2 M0：验证周</h3>
+<p>任务清单：</p>
+<ol class="list"><li>选定一座可持续维护内容的城市，划定四到六个片区。</li><li>访谈 5—8 名近三个月出游者，重点问"途中改过什么、为什么改"。</li><li>整理 20 个样本地点，字段按最终结构填写，检验字段设计是否够用。</li><li>手写两条完整路线模板，验证排程规则是否可执行。</li><li>验证地图 SDK 集成、路径规划字段、天气接口预报范围。</li><li>书面确认第三方数据的使用范围（存储、缓存、离线、导出、模型）。</li><li>画出创建行程、行程详情、今天三个页面的线框。</li><li>编写首批验收场景，冻结数据结构 v1。</li></ol>
+<p>出门条件：以上八项全部有产出。任何一项缺失，M1 不应启动。</p>
+<h3 id="section-11-3"><span class="h3-mark">▎</span> 11.3 M1：内容与基础</h3>
+<p>范围：城市列表与详情、分类筛选、地点详情、收藏、账号与同步骨架、内容后台最小可用、8 条模板录入。</p>
+<p>验收：20 个地点可完整浏览；后台可新增与修改地点并即时生效；账号登录后收藏可跨设备同步。</p>
+<h3 id="section-11-4"><span class="h3-mark">▎</span> 11.4 M2：行程主流程</h3>
+<p>范围：三步创建、排程引擎 v1、时间线与地图、编辑六种操作、冲突检测、版本保存。</p>
+<p>验收：给定五个测试用例（不同到达时间、不同节奏、含预约、含必去、跨片区），生成结果全部满足硬约束；拖动任一项目后冲突判定准确；保存后重启数据不丢。</p>
+<h3 id="section-11-5"><span class="h3-mark">▎</span> 11.5 M3：随行与恢复</h3>
+<p>范围：今天页、局部重排、分享与脱敏、离线草稿、多端冲突处理、降级矩阵实现。</p>
+<p>验收：断网状态下可查看行程并勾选完成；恢复网络后草稿正确同步；两台设备同时编辑触发对比而非覆盖；分享链接撤销后立即失效。</p>
+<h3 id="section-11-6"><span class="h3-mark">▎</span> 11.6 M4：内测与修订</h3>
+<p>范围：20—50 名真实用户、单城、三到五趟真实旅行。收集问题类型：路径不合理、信息过期、交互卡点。</p>
+<p>验收：黄金场景全部跑通；致命问题清零；内容报错闭环时长进入目标区间。</p>
+<h3 id="section-11-7"><span class="h3-mark">▎</span> 11.7 资源换算</h3>
+<table class="grid"><thead><tr><th>投入模式</th><th>周投入</th><th>预计周期</th><th>说明</th></tr></thead><tbody><tr><td>2 人全职</td><td>80 小时</td><td>8—10 周</td><td>基准方案</td></tr><tr><td>1 人全职 + 1 人兼职</td><td>60 小时</td><td>11—14 周</td><td>内容进度易滞后</td></tr><tr><td>1 人兼职（学习为主）</td><td>15—20 小时</td><td>16—22 周</td><td>建议先砍 P0 的分享与协作</td></tr></tbody></table>
+<h3 id="section-11-8"><span class="h3-mark">▎</span> 11.8 里程碑完成标准</h3>
+<p>每个里程碑需同时满足四条才算完成：功能可演示、验收用例通过、无致命缺陷、文档与数据结构同步更新。只完成代码不算完成。</p>
+<h3 id="section-11-9"><span class="h3-mark">▎</span> 11.9 风险登记册</h3>
+<table class="grid"><thead><tr><th>风险</th><th>可能性</th><th>影响</th><th>应对</th></tr></thead><tbody><tr><td>数据授权不清晰</td><td>高</td><td>高</td><td>第一周书面确认，主内容以自有为主</td></tr><tr><td>内容维护跟不上</td><td>高</td><td>高</td><td>限制城市范围，只维护关键字段，接受"待确认"</td></tr><tr><td>排程结果不合理</td><td>中</td><td>高</td><td>模板兜底 + 人工抽检 30 条 + 快速修正</td></tr><tr><td>单人开发延期</td><td>高</td><td>中</td><td>缩减 P0，先做单端单城</td></tr><tr><td>接口限流与费用超预期</td><td>中</td><td>中</td><td>候选集限制 + 缓存 + 配额告警</td></tr><tr><td>合规遗漏</td><td>中</td><td>高</td><td>上线前逐项过检查清单</td></tr><tr><td>用户不用今天页</td><td>中</td><td>中</td><td>内测观察入口位置与打开路径</td></tr></tbody></table>
+<h3 id="section-11-10"><span class="h3-mark">▎</span> 11.10 指标</h3>
+<p>北极星指标：<strong>一周内完成"生成—保存—旅行中使用今天页"的行程数。</strong></p>
+<p>辅助指标分四组：获取（城市页到创建转化率）、激活（首份行程保存时长与保存率）、留存（七日内再次创建或复用比例）、质量（冲突率、信息过期率、报错闭环时长、单份行程外部成本）。</p>
+<h2 id="section-12">十二、验收标准</h2>
+<p>本章给出可执行的验收方式：功能清单、一条端到端黄金场景、十条例边界用例与非功能指标。全部通过才算首版完成。</p>
+<h3 id="section-12-1"><span class="h3-mark">▎</span> 12.1 功能验收</h3>
+<p>按第四章 P0 清单逐项验收，每项需给出可复现的操作步骤与预期结果。验收用例与需求条目一一对应，不允许"看起来能用"式通过。</p>
+<h3 id="section-12-2"><span class="h3-mark">▎</span> 12.2 黄金场景</h3>
+<p>一条端到端场景必须完整跑通，才说明主要功能串起来了：</p>
+<p class="quote">&nbsp;&nbsp;两名用户，两天行程。第一天 11:00 到站，第二天 17:00 离开；喜欢历史与美食，选择轻松节奏；第二天 10:00 有一个已预约的博物馆场次。第一天下午下雨，跳过一站并改为室内；途中在另一台设备上继续编辑并保存。</p>
+<p>预期结果：生成方案满足到达与返程约束；跳过操作保留已完成记录；室内替换仅影响未执行部分；两台设备不出现静默覆盖；分享链接不含住宿信息。</p>
+<h3 id="section-12-3"><span class="h3-mark">▎</span> 12.3 边界用例</h3>
+<table class="grid"><thead><tr><th>编号</th><th>场景</th><th>预期</th></tr></thead><tbody><tr><td>E01</td><td>到达时间晚于所有景点闭馆</td><td>当天只安排餐饮与休息，并说明原因</td></tr><tr><td>E02</td><td>必去点与预约时间冲突</td><td>明确提示冲突，给出取舍建议</td></tr><tr><td>E03</td><td>全部地点信息缺失</td><td>不生成确定性行程，提示待确认</td></tr><tr><td>E04</td><td>生成中断网</td><td>任务保留，恢复后可继续查看结果</td></tr><tr><td>E05</td><td>同一行程重复点击保存</td><td>不产生重复版本</td></tr><tr><td>E06</td><td>分享后原行程被修改</td><td>快照不变，提示"已更新，可查看最新"</td></tr><tr><td>E07</td><td>撤销跨天移动</td><td>一次撤销回到移动前状态</td></tr><tr><td>E08</td><td>场所临时闭馆</td><td>标红并给替代，不自动替换</td></tr><tr><td>E09</td><td>预算极低</td><td>生成免费与低价组合，标注估算</td></tr><tr><td>E10</td><td>系统时间被修改</td><td>以服务端时间为准，提示异常</td></tr></tbody></table>
+<h3 id="section-12-4"><span class="h3-mark">▎</span> 12.4 非功能验收</h3>
+<table class="grid"><thead><tr><th>维度</th><th>标准</th></tr></thead><tbody><tr><td>生成耗时</td><td>常规城市 15 秒内完成，超时给降级方案</td></tr><tr><td>首屏加载</td><td>已保存行程离线冷启动 2 秒内可见</td></tr><tr><td>稳定性</td><td>连续使用 30 分钟无崩溃，内存无持续增长</td></tr><tr><td>一致性</td><td>时间线与地图数据源一致，抽查十次无偏差</td></tr><tr><td>安全</td><td>越权访问他人行程返回无权限，日志不含敏感明文</td></tr><tr><td>合规</td><td>第九章检查清单全部通过</td></tr></tbody></table>
+<h2 id="section-13">附录 A：关键字段清单</h2>
+<table class="grid"><thead><tr><th>对象</th><th>必填字段</th><th>选填字段</th></tr></thead><tbody><tr><td>地点</td><td>内部 ID、名称、类别、坐标、片区、状态</td><td>别名、分店、简介、图片、标签</td></tr><tr><td>开放规则</td><td>星期规则、最晚入场</td><td>日期例外、节假日规则、休馆日</td></tr><tr><td>费用</td><td>门票类型、价格区间、币种</td><td>优惠政策、是否需预约</td></tr><tr><td>活动</td><td>名称、所属地点、类型</td><td>演出时长、适龄提示</td></tr><tr><td>场次</td><td>日期、开始时间、时长</td><td>余票状态、入场截止</td></tr><tr><td>行程</td><td>所有者、起止日期、节奏、偏好快照</td><td>主题、同行人数、预算</td></tr><tr><td>行程项</td><td>日期、顺序、地点 ID、停留时长</td><td>锁定、备注、预约关联</td></tr></tbody></table>
+<h2 id="section-14">附录 B：参考与说明</h2>
+<p>本文档中的城市、地点、时段与费用均为方法示例，不对应真实营业数据。涉及第三方地图、天气与票务服务时，具体能力、字段与授权范围以服务商现行协议为准，接入前需完成书面确认。</p>
+<p>地方性法规、行业规范与平台审核要求可能随时间和地区变化，上线前应由法务按实际情况复核第九章相关内容。</p>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>城市自由行 App · 设计稿 v1</title>
+<style>
+  :root{
+    --ink:#1A1A17;
+    --ink-2:#5C5F58;
+    --ink-3:#8E9189;
+    --paper:#F7F5F0;
+    --card:#FFFFFF;
+    --line:#E8E4DB;
+    --line-2:#F0EDE6;
+    --green:#17564E;
+    --green-deep:#0E3A34;
+    --green-mid:#2F7A6C;
+    --green-soft:#E4EFEA;
+    --clay:#C7633B;
+    --clay-soft:#F8EAE2;
+    --warn:#B3452F;
+    --radius-s:10px;
+    --radius-m:14px;
+    --radius-l:20px;
+    --radius-xl:28px;
+    --shadow-1:0 1px 2px rgba(20,24,22,.05);
+    --shadow-2:0 10px 30px rgba(20,24,22,.07);
+    --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:var(--font);
+    background:#EDEAE3;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding:0 0 96px;
+  }
+  a{color:inherit;text-decoration:none;}
+  svg{display:block;}
+
+  /* ---------- 页面骨架 ---------- */
+  .wrap{max-width:1480px;margin:0 auto;padding:0 40px;}
+  .page-head{padding:88px 0 56px;border-bottom:1px solid var(--line);}
+  .eyebrow{
+    font-size:12px;letter-spacing:.22em;color:var(--green);
+    font-weight:600;margin-bottom:26px;
+  }
+  .page-head h1{
+    font-size:64px;line-height:1.06;letter-spacing:-.02em;font-weight:600;
+    color:var(--ink);margin-bottom:22px;
+  }
+  .page-head h1 em{
+    display:block;font-style:normal;color:var(--green);
+    font-size:33px;font-weight:500;letter-spacing:0;line-height:1.45;margin-top:16px;
+  }
+  .lede{font-size:17px;line-height:1.85;color:var(--ink-2);max-width:720px;}
+  .head-meta{display:flex;gap:56px;margin-top:44px;flex-wrap:wrap;}
+  .head-meta div span{display:block;font-size:11px;letter-spacing:.14em;color:var(--ink-3);margin-bottom:7px;}
+  .head-meta div b{font-size:15px;font-weight:500;color:var(--ink);}
+
+  .block{padding:64px 0 8px;}
+  .block-head{display:flex;align-items:baseline;gap:18px;margin-bottom:36px;}
+  .block-head .idx{
+    font-size:12px;font-weight:600;color:var(--clay);letter-spacing:.16em;
+    padding-bottom:4px;
+  }
+  .block-head h2{font-size:26px;font-weight:600;letter-spacing:-.01em;}
+  .block-head p{font-size:13px;color:var(--ink-3);margin-left:auto;}
+
+  /* ---------- 原则卡 ---------- */
+  .principles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;}
+  .p-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius-l);
+    padding:26px 24px 28px;
+  }
+  .p-card .n{font-size:11px;letter-spacing:.16em;color:var(--clay);font-weight:600;margin-bottom:52px;}
+  .p-card h3{font-size:17px;font-weight:600;margin-bottom:10px;letter-spacing:-.01em;}
+  .p-card p{font-size:13px;line-height:1.8;color:var(--ink-2);}
+
+  /* ---------- 设计语言 ---------- */
+  .lang{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-l);padding:30px 28px;}
+  .panel h3{font-size:12px;letter-spacing:.16em;color:var(--ink-3);font-weight:600;margin-bottom:22px;text-transform:uppercase;}
+  .swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;}
+  .sw{border-radius:var(--radius-s);overflow:hidden;border:1px solid rgba(0,0,0,.05);}
+  .sw .chip{height:66px;}
+  .sw .info{padding:9px 10px 10px;background:#fff;}
+  .sw .info b{display:block;font-size:11px;font-weight:600;margin-bottom:2px;}
+  .sw .info span{font-size:10px;color:var(--ink-3);letter-spacing:.04em;}
+  .typescale{margin-top:4px;}
+  .ts{display:flex;align-items:baseline;gap:16px;padding:11px 0;border-bottom:1px dashed var(--line-2);}
+  .ts:last-child{border-bottom:none;}
+  .ts .u{font-size:10px;color:var(--ink-3);width:66px;flex:none;letter-spacing:.06em;}
+  .ts .s{color:var(--ink);letter-spacing:-.01em;}
+  .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:6px;}
+  .metric{background:var(--paper);border-radius:var(--radius-s);padding:14px 14px 15px;}
+  .metric b{display:block;font-size:18px;font-weight:600;margin-bottom:5px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+  .metric span{font-size:10.5px;color:var(--ink-3);line-height:1.5;display:block;}
+
+  /* ---------- 组件 ---------- */
+  .comp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
+  .comp .panel{min-height:200px;}
+  .btn-primary{
+    display:flex;align-items:center;justify-content:center;
+    height:48px;border-radius:var(--radius-m);background:var(--green);
+    color:#fff;font-size:15px;font-weight:500;font-family:var(--font);
+    border:none;width:100%;letter-spacing:.01em;
+    box-shadow:0 6px 16px rgba(23,86,78,.18);
+  }
+  .btn-ghost{
+    display:flex;align-items:center;justify-content:center;
+    height:48px;border-radius:var(--radius-m);background:transparent;
+    color:var(--green);font-size:15px;font-weight:500;
+    border:1px solid rgba(23,86,78,.28);width:100%;
+  }
+  .btn-quiet{
+    display:flex;align-items:center;justify-content:center;
+    height:44px;border-radius:12px;background:var(--paper);
+    color:var(--ink-2);font-size:14px;font-weight:500;border:none;
+  }
+  .tagrow{display:flex;gap:8px;flex-wrap:wrap;}
+  .tag{
+    font-size:12px;padding:6px 12px;border-radius:999px;
+    background:var(--green-soft);color:var(--green-deep);
+  }
+  .tag.clay{background:var(--clay-soft);color:#8E3E1E;}
+  .tag.line{background:transparent;border:1px solid var(--line);color:var(--ink-2);}
+  .comp-note{font-size:11px;color:var(--ink-3);margin-top:14px;line-height:1.7;}
+
+  /* ---------- 手机 ---------- */
+  .screens{
+    display:grid;grid-template-columns:repeat(4,390px);
+    gap:44px 40px;justify-content:start;
+  }
+  .screen{width:390px;}
+  .phone{
+    width:390px;height:844px;border-radius:46px;background:var(--paper);
+    position:relative;overflow:hidden;
+    border:1px solid #DAD5C9;
+    box-shadow:0 2px 0 #fff inset, 0 24px 60px rgba(26,26,23,.10);
+  }
+  .statusbar{
+    height:46px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 26px 0 30px;color:var(--ink);position:relative;z-index:5;
+  }
+  .sb-time{font-size:14px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums;}
+  .sb-right{display:flex;align-items:center;gap:5px;color:var(--ink);}
+  .sb-right svg{fill:currentColor;}
+
+  .app{position:relative;height:calc(844px - 46px);overflow:hidden;}
+  .app.with-tab{height:calc(844px - 46px);}
+  .pad{padding:0 22px;}
+
+  .fig{margin-top:16px;}
+  .fig .row{display:flex;align-items:baseline;gap:9px;}
+  .fig .no{font-size:11px;font-weight:600;color:var(--clay);letter-spacing:.1em;}
+  .fig b{font-size:14px;font-weight:600;}
+  .fig p{font-size:12px;color:var(--ink-3);line-height:1.7;margin-top:5px;}
+
+  /* ---------- 通用界面元素 ---------- */
+  .nav{
+    height:52px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;
+  }
+  .nav .ic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.72);color:var(--ink);}
+  .nav .ic.plain{background:transparent;}
+  .nav .ttl{font-size:15px;font-weight:600;}
+  .loc{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;}
+  .loc svg{color:var(--green);}
+
+  .h-xl{font-size:26px;line-height:1.3;font-weight:600;letter-spacing:-.02em;}
+  .h-l{font-size:21px;line-height:1.35;font-weight:600;letter-spacing:-.01em;}
+  .h-m{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .sub{font-size:12.5px;color:var(--ink-3);line-height:1.7;}
+
+  .hero{
+    position:relative;margin-top:18px;border-radius:var(--radius-xl);overflow:hidden;
+    background:linear-gradient(158deg,#1D6357 0%,#2E7C6B 52%,#7AAE93 100%);
+    box-shadow:var(--shadow-2);
+  }
+  .hero .art{position:absolute;left:0;right:0;bottom:0;height:120px;opacity:.55;}
+  .hero .glow{
+    position:absolute;width:190px;height:190px;border-radius:50%;
+    right:-58px;top:-72px;background:radial-gradient(circle,rgba(255,255,255,.42),rgba(255,255,255,0) 68%);
+  }
+  .hero-in{position:relative;padding:20px 20px 18px;color:#fff;}
+  .hero-kicker{font-size:10.5px;letter-spacing:.24em;opacity:.78;margin-bottom:10px;}
+  .hero-title{font-size:18px;line-height:1.45;font-weight:600;letter-spacing:-.01em;margin-bottom:12px;}
+  .hero-tags{display:flex;gap:7px;margin-bottom:16px;}
+  .hero-tags span{font-size:11px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.18);}
+  .hero-btn{
+    height:44px;border-radius:12px;background:#fff;color:var(--green-deep);
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    font-size:14px;font-weight:600;
+  }
+
+  .sec-row{display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px;}
+  .sec-row h2{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+  .sec-row a{font-size:12px;color:var(--ink-3);}
+
+  .hscroll{display:flex;gap:12px;overflow:hidden;margin:0 -22px;padding:0 22px;}
+  .route{
+    flex:none;width:186px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-m);padding:14px 14px 13px;
+  }
+  .route .thumb{height:48px;border-radius:9px;margin-bottom:11px;position:relative;overflow:hidden;}
+  .route .thumb svg{position:absolute;bottom:0;left:0;}
+  .route b{font-size:13.5px;font-weight:600;display:block;margin-bottom:4px;}
+  .route span{font-size:11px;color:var(--ink-3);}
+
+  .place{
+    display:flex;gap:12px;align-items:center;padding:11px 0;
+    border-bottom:1px solid var(--line-2);
+  }
+  .place:last-child{border-bottom:none;}
+  .place .pt{width:52px;height:52px;border-radius:11px;flex:none;overflow:hidden;position:relative;}
+  .place .txt{flex:1;min-width:0;}
+  .place .txt b{font-size:13.5px;font-weight:600;display:block;margin-bottom:3px;}
+  .place .txt span{font-size:11.5px;color:var(--ink-3);}
+  .place .meta{font-size:11px;color:var(--green);font-weight:500;white-space:nowrap;}
+
+  /* tabbar */
+  .tabbar{
+    position:absolute;left:0;right:0;bottom:0;height:62px;
+    background:rgba(255,255,255,.94);border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-around;
+    padding-bottom:0;backdrop-filter:blur(8px);
+  }
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-3);font-size:10px;}
+  .tab svg{stroke:currentColor;fill:none;stroke-width:1.6;}
+  .tab.active{color:var(--green);}
+  .tab.active svg{stroke-width:1.9;}
+
+  /* 区块标题 */
+  .block-title{font-size:11px;letter-spacing:.16em;color:var(--ink-3);font-weight:600;margin:20px 0 10px;}
+
+  /* 城市封面 */
+  .citycover{position:relative;height:168px;overflow:hidden;
+    background:linear-gradient(150deg,#1C5C52 0%,#367F6C 58%,#89B79C 100%);}
+  .citycover .art{position:absolute;bottom:0;left:0;right:0;}
+  .citycover .txt{position:absolute;left:22px;bottom:18px;color:#fff;z-index:2;}
+  .citycover .txt .k{font-size:10px;letter-spacing:.24em;opacity:.8;margin-bottom:6px;}
+  .citycover .txt .n{font-size:26px;font-weight:600;letter-spacing:.04em;}
+
+  .stats{display:flex;gap:0;margin-top:6px;}
+  .stats div{flex:1;text-align:center;padding:12px 0;}
+  .stats b{display:block;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;}
+  .stats span{font-size:10.5px;color:var(--ink-3);}
+  .stats div+div{border-left:1px solid var(--line-2);}
+
+  .chips{display:flex;gap:8px;overflow:hidden;margin:0 -22px;padding:0 22px;}
+  .chip{flex:none;font-size:12px;padding:7px 14px;border-radius:999px;
+    background:#fff;border:1px solid var(--line);color:var(--ink-2);}
+  .chip.on{background:var(--green);border-color:var(--green);color:#fff;}
+
+  .catgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .cat{background:#fff;border:1px solid var(--line);border-radius:13px;
+    padding:13px 8px 11px;text-align:center;}
+  .cat .ci{width:26px;height:26px;margin:0 auto 7px;color:var(--green);}
+  .cat span{font-size:11px;color:var(--ink-2);}
+
+  /* 地点详情 */
+  .dcover{height:196px;position:relative;overflow:hidden;
+    background:linear-gradient(160deg,#3B6E62 0%,#6F9C82 46%,#C9A883 100%);}
+  .dcover .art{position:absolute;bottom:0;left:0;right:0;}
+  .dcover .badge{position:absolute;top:58px;left:22px;font-size:11px;color:#fff;
+    background:rgba(0,0,0,.24);padding:5px 11px;border-radius:999px;backdrop-filter:blur(4px);}
+  .dhead{padding:16px 22px 0;}
+  .dhead .t{font-size:23px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px;}
+  .dhead .m{font-size:12px;color:var(--ink-3);display:flex;gap:8px;align-items:center;}
+  .dot{width:3px;height:3px;border-radius:50%;background:var(--ink-3);display:inline-block;}
+
+  .infobox{background:#fff;border:1px solid var(--line);border-radius:var(--radius-m);
+    padding:4px 16px;margin:16px 22px 0;}
+  .inforow{display:flex;justify-content:space-between;align-items:center;
+    padding:11px 0;border-bottom:1px solid var(--line-2);font-size:12.5px;}
+  .inforow:last-child{border-bottom:none;}
+  .inforow .k{color:var(--ink-3);}
+  .inforow .v{font-weight:500;text-align:right;}
+  .inforow .v.warn{color:var(--warn);}
+  .src{font-size:10.5px;color:var(--ink-3);margin:9px 22px 0;display:flex;gap:6px;align-items:center;}
+  .src .ok{color:var(--green);}
+
+  .bodytext{font-size:13.5px;line-height:1.85;color:var(--ink-2);margin:14px 22px 0;}
+  .dbar{
+    position:absolute;left:0;right:0;bottom:0;padding:12px 22px 20px;
+    background:linear-gradient(#FFF0,#FFF 34%);display:flex;gap:10px;
+  }
+  .dbar .save{
+    width:52px;height:50px;border-radius:14px;border:1px solid var(--line);
+    background:#fff;display:flex;align-items:center;justify-content:center;color:var(--green);
+  }
+  .dbar .add{
+    flex:1;height:50px;border-radius:14px;background:var(--green);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;
+    box-shadow:0 6px 16px rgba(23,86,78,.18);
+  }
+
+  /* 创建流程 */
+  .steps{display:flex;gap:6px;padding:6px 22px 0;}
+  .steps i{height:3px;flex:1;border-radius:2px;background:var(--line);}
+  .steps i.on{background:var(--green);}
+  .form{padding:0 22px;}
+  .field{margin-top:18px;}
+  .field .lb{font-size:11.5px;color:var(--ink-3);margin-bottom:8px;letter-spacing:.04em;}
+  .inputrow{
+    background:#fff;border:1px solid var(--line);border-radius:13px;
+    padding:13px 15px;display:flex;align-items:center;justify-content:space-between;
+    font-size:14px;
+  }
+  .inputrow .r{color:var(--ink-3);font-size:12.5px;display:flex;align-items:center;gap:6px;}
+  .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .seg .s{
+    background:#fff;border:1px solid var(--line);border-radius:13px;
+    padding:12px 8px;text-align:center;
+  }
+  .seg .s b{display:block;font-size:13.5px;font-weight:600;margin-bottom:3px;}
+  .seg .s span{font-size:10.5px;color:var(--ink-3);}
+  .seg .s.on{background:var(--green);border-color:var(--green);}
+  .seg .s.on b{color:#fff;}
+  .seg .s.on span{color:rgba(255,255,255,.72);}
+  .hint{font-size:11.5px;color:var(--ink-3);line-height:1.7;margin-top:9px;}
+  .hint b{color:var(--green);font-weight:500;}
+
+  .tags{display:flex;flex-wrap:wrap;gap:8px;}
+  .t2{
+    display:flex;align-items:center;gap:6px;
+    background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:8px 13px;font-size:12.5px;color:var(--ink-2);
+  }
+  .t2.on{background:var(--green-soft);border-color:rgba(23,86,78,.32);color:var(--green-deep);}
+  .t2 .d{display:flex;gap:2px;}
+  .t2 .d i{width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.35;}
+  .t2 .d i.f{opacity:1;}
+
+  .picked{background:#fff;border:1px solid var(--line);border-radius:13px;
+    padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-top:9px;}
+  .picked .l b{font-size:13.5px;font-weight:600;display:block;margin-bottom:2px;}
+  .picked .l span{font-size:11.5px;color:var(--ink-3);}
+  .picked .x{width:22px;height:22px;border-radius:50%;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;}
+
+  .footbtn{position:absolute;left:0;right:0;bottom:0;padding:14px 22px 26px;
+    background:linear-gradient(#FFF0,#FFF 38%);}
+  .footbtn .note{text-align:center;font-size:11px;color:var(--ink-3);margin-top:10px;}
+
+  /* 生成中 */
+  .gen{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 40px;}
+  .ring{width:96px;height:96px;position:relative;margin-bottom:28px;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:600;color:var(--green);font-variant-numeric:tabular-nums;}
+  .gen h3{font-size:19px;font-weight:600;margin-bottom:10px;}
+  .gen p.s{font-size:12.5px;color:var(--ink-3);text-align:center;line-height:1.7;}
+  .gensteps{width:100%;margin-top:30px;}
+  .genstep{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:12.5px;color:var(--ink-2);}
+  .genstep .tick{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+  .genstep.done .tick{background:var(--green-soft);color:var(--green);}
+  .genstep.now{color:var(--green-deep);font-weight:500;}
+  .genstep.now .tick{border:2px solid rgba(23,86,78,.25);border-top-color:var(--green);}
+  .genstep.todo{color:var(--ink-3);}
+  .genstep.todo .tick{border:1.5px solid var(--line);}
+  .skel{margin-top:34px;width:100%;}
+  .skel .row{height:14px;border-radius:7px;background:#EAE6DC;margin-bottom:9px;}
+  .skel .row:nth-child(1){width:62%;}
+  .skel .row:nth-child(2){width:88%;}
+  .skel .row:nth-child(3){width:74%;}
+
+  /* 行程详情 */
+  .trip-head{padding:4px 22px 0;}
+  .trip-top{display:flex;align-items:center;justify-content:space-between;}
+  .trip-top .t{font-size:20px;font-weight:600;letter-spacing:-.01em;}
+  .save-state{font-size:10.5px;color:var(--green);display:flex;align-items:center;gap:5px;
+    background:var(--green-soft);padding:4px 9px;border-radius:999px;}
+  .daytabs{display:flex;gap:8px;margin-top:14px;}
+  .daytab{flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:9px 10px;text-align:center;}
+  .daytab b{display:block;font-size:12.5px;font-weight:600;margin-bottom:2px;}
+  .daytab span{font-size:10px;color:var(--ink-3);}
+  .daytab.on{background:var(--green);border-color:var(--green);}
+  .daytab.on b{color:#fff;}
+  .daytab.on span{color:rgba(255,255,255,.7);}
+
+  .overview{display:flex;gap:0;background:#fff;border:1px solid var(--line);
+    border-radius:var(--radius-m);padding:11px 0;margin:12px 22px 0;}
+  .overview div{flex:1;text-align:center;}
+  .overview b{display:block;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;}
+  .overview span{font-size:10px;color:var(--ink-3);}
+  .overview div+div{border-left:1px solid var(--line-2);}
+
+  .timeline{padding:14px 22px 0;position:relative;}
+  .tl-item{display:flex;gap:12px;position:relative;padding-bottom:16px;}
+  .tl-time{width:44px;flex:none;font-size:12px;font-weight:600;color:var(--ink);
+    font-variant-numeric:tabular-nums;padding-top:12px;}
+  .tl-rail{width:14px;flex:none;position:relative;}
+  .tl-rail .node{position:absolute;left:3px;top:16px;width:8px;height:8px;border-radius:50%;
+    background:var(--green);box-shadow:0 0 0 3px var(--green-soft);}
+  .tl-rail .node.hollow{background:#fff;box-shadow:0 0 0 2px var(--line);}
+  .tl-rail .line{position:absolute;left:6.5px;top:26px;bottom:-4px;width:1px;background:var(--line);}
+  .tl-card{flex:1;background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 13px;}
+  .tl-card .n{font-size:14px;font-weight:600;margin-bottom:4px;letter-spacing:-.01em;}
+  .tl-card .why{font-size:11.5px;color:var(--ink-3);line-height:1.65;margin-bottom:8px;}
+  .tl-card .foot{display:flex;align-items:center;gap:8px;}
+  .tl-card .foot .tg{font-size:10px;padding:3px 8px;border-radius:999px;background:var(--paper);color:var(--ink-2);}
+  .tl-card .foot .tg.g{background:var(--green-soft);color:var(--green-deep);}
+  .tl-card .foot .tg.c{background:var(--clay-soft);color:#8E3E1E;}
+  .tl-card .swap{margin-left:auto;font-size:11px;color:var(--green);font-weight:500;}
+  .transit{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--ink-3);padding:0 0 0 70px;margin-top:-8px;margin-bottom:12px;}
+
+  .alert{background:var(--clay-soft);border-radius:12px;padding:11px 13px;
+    margin:12px 22px 0;display:flex;gap:9px;align-items:flex-start;}
+  .alert .ai{color:var(--warn);flex:none;margin-top:1px;}
+  .alert p{font-size:11.5px;line-height:1.65;color:#7E3A20;}
+  .alert p b{font-weight:600;color:var(--warn);}
+
+  /* 地图 */
+  .mapwrap{position:relative;height:322px;margin-top:10px;}
+  .mapwrap svg{width:100%;height:100%;}
+  .mapcard{position:absolute;left:14px;right:14px;bottom:12px;background:#fff;
+    border-radius:var(--radius-m);padding:12px 14px;box-shadow:0 10px 30px rgba(20,24,22,.14);
+    display:flex;align-items:center;gap:12px;}
+  .mapcard .num{width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;}
+  .mapcard .tx b{font-size:13.5px;display:block;margin-bottom:2px;}
+  .mapcard .tx span{font-size:11px;color:var(--ink-3);}
+  .mapcard .go{margin-left:auto;font-size:11.5px;color:var(--green);font-weight:500;}
+
+  /* 冲突弹层 */
+  .scrim{position:absolute;inset:0;background:rgba(20,24,22,.42);backdrop-filter:blur(1.5px);}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;
+    border-radius:24px 24px 0 0;padding:10px 22px 26px;}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 18px;}
+  .sheet h3{font-size:18px;font-weight:600;margin-bottom:8px;letter-spacing:-.01em;}
+  .sheet .desc{font-size:12.5px;line-height:1.75;color:var(--ink-2);margin-bottom:16px;}
+  .sheet .desc b{color:var(--warn);font-weight:600;}
+  .opt{display:flex;align-items:center;gap:11px;border:1px solid var(--line);
+    border-radius:13px;padding:12px 13px;margin-bottom:8px;}
+  .opt .oi{width:28px;height:28px;border-radius:9px;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;color:var(--green);flex:none;}
+  .opt b{font-size:13px;font-weight:600;display:block;margin-bottom:2px;}
+  .opt span{font-size:11px;color:var(--ink-3);}
+  .opt.reco{border-color:rgba(23,86,78,.4);background:rgba(228,239,234,.4);}
+  .sheet-actions{display:flex;gap:10px;margin-top:14px;}
+
+  /* 今天 */
+  .today-head{padding:6px 22px 0;}
+  .today-head .d{font-size:11.5px;color:var(--ink-3);letter-spacing:.06em;margin-bottom:5px;}
+  .today-head .t{font-size:22px;font-weight:600;letter-spacing:-.01em;}
+  .progress{display:flex;align-items:center;gap:9px;margin-top:12px;}
+  .progress .bar{flex:1;height:4px;border-radius:2px;background:var(--line);overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:33%;background:var(--green);border-radius:2px;}
+  .progress span{font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+
+  .next{background:var(--green);border-radius:var(--radius-xl);padding:20px;
+    margin:16px 22px 0;color:#fff;position:relative;overflow:hidden;
+    box-shadow:0 14px 34px rgba(23,86,78,.24);}
+  .next .glow2{position:absolute;width:170px;height:170px;border-radius:50%;right:-60px;top:-70px;
+    background:radial-gradient(circle,rgba(255,255,255,.28),rgba(255,255,255,0) 70%);}
+  .next .k{font-size:10.5px;letter-spacing:.2em;opacity:.75;margin-bottom:9px;position:relative;}
+  .next .n{font-size:24px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px;position:relative;}
+  .next .m{font-size:12.5px;opacity:.85;margin-bottom:4px;position:relative;}
+  .countdown{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;
+    background:rgba(255,255,255,.16);padding:5px 10px;border-radius:999px;margin-top:10px;position:relative;}
+  .next-actions{display:flex;gap:9px;margin-top:18px;position:relative;}
+  .next-actions .go{flex:1.4;height:46px;border-radius:13px;background:#fff;color:var(--green-deep);
+    display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:600;}
+  .next-actions .sec{flex:1;height:46px;border-radius:13px;background:rgba(255,255,255,.14);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;}
+
+  .rest{margin:18px 22px 0;}
+  .rest .r-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-2);}
+  .rest .r-row .tt{width:42px;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+  .rest .r-row .rn{flex:1;font-size:13px;}
+  .rest .r-row .rd{font-size:10.5px;color:var(--ink-3);}
+
+  /* 行程列表 */
+  .list-head{padding:8px 22px 0;display:flex;align-items:center;justify-content:space-between;}
+  .list-head h2{font-size:24px;font-weight:600;letter-spacing:-.01em;}
+  .tripcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius-m);
+    padding:14px;margin:10px 22px 0;display:flex;gap:13px;align-items:center;}
+  .tripcard .cover{width:56px;height:66px;border-radius:11px;flex:none;position:relative;overflow:hidden;}
+  .tripcard .info{flex:1;}
+  .tripcard .info b{font-size:14.5px;font-weight:600;display:block;margin-bottom:4px;}
+  .tripcard .info .meta{font-size:11px;color:var(--ink-3);margin-bottom:8px;}
+  .tripcard .info .bar2{height:3px;border-radius:2px;background:var(--line);overflow:hidden;width:100%;}
+  .tripcard .info .bar2 i{display:block;height:100%;background:var(--green);}
+  .tripcard .right{font-size:10.5px;color:var(--ink-3);text-align:right;line-height:1.6;flex:none;}
+
+  /* 分享 */
+  .share-preview{background:#fff;border:1px solid var(--line);border-radius:var(--radius-m);
+    padding:16px;margin:12px 22px 0;}
+  .share-preview .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .share-preview .top b{font-size:14px;font-weight:600;}
+  .share-preview .top span{font-size:10px;color:var(--ink-3);background:var(--paper);padding:4px 8px;border-radius:999px;}
+  .share-line{display:flex;gap:9px;align-items:center;padding:6px 0;font-size:11.5px;color:var(--ink-2);}
+  .share-line .n{width:16px;height:16px;border-radius:50%;background:var(--green-soft);color:var(--green-deep);
+    font-size:9px;display:flex;align-items:center;justify-content:center;flex:none;}
+
+  .switchrow{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 0;border-bottom:1px solid var(--line-2);}
+  .switchrow .l b{font-size:13.5px;font-weight:500;display:block;margin-bottom:3px;}
+  .switchrow .l span{font-size:10.5px;color:var(--ink-3);}
+  .sw2{width:42px;height:25px;border-radius:999px;background:var(--green);position:relative;flex:none;}
+  .sw2 i{position:absolute;right:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .sw2.off{background:var(--line);}
+  .sw2.off i{left:3px;right:auto;}
+
+  .notice{background:var(--paper);border-radius:12px;padding:12px 13px;margin:14px 22px 0;
+    font-size:11px;line-height:1.7;color:var(--ink-2);display:flex;gap:8px;}
+
+  /* 流程 */
+  .flow{display:flex;align-items:stretch;gap:0;margin-top:8px;}
+  .flow .step{flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--radius-m);
+    padding:18px 16px;position:relative;}
+  .flow .step+.step{margin-left:14px;}
+  .flow .step+.step:before{content:"";position:absolute;left:-14px;top:50%;width:14px;height:1px;background:var(--line);}
+  .flow .step .k{font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:600;margin-bottom:26px;}
+  .flow .step b{display:block;font-size:14px;font-weight:600;margin-bottom:7px;}
+  .flow .step p{font-size:11.5px;line-height:1.7;color:var(--ink-3);}
+  .flow-note{margin-top:18px;font-size:12.5px;color:var(--ink-2);line-height:1.8;
+    background:#fff;border-left:3px solid var(--green);padding:14px 18px;border-radius:0 10px 10px 0;}
+
+  /* 交接 */
+  .handoff{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;}
+  .handoff .panel h4{font-size:14px;font-weight:600;margin-bottom:12px;}
+  .handoff ul{list-style:none;}
+  .handoff li{font-size:12.5px;line-height:1.85;color:var(--ink-2);padding-left:14px;position:relative;}
+  .handoff li:before{content:"";position:absolute;left:0;top:9px;width:4px;height:4px;border-radius:50%;background:var(--clay);}
+
+  .page-foot{margin-top:80px;padding-top:28px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);}
+
+  @media (max-width:1560px){
+    .screens{grid-template-columns:repeat(3,390px);}
+  }
+  @media (max-width:1200px){
+    .screens{grid-template-columns:repeat(2,390px);}
+    .principles,.comp,.handoff{grid-template-columns:1fr 1fr;}
+    .lang{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <p class="eyebrow">PRODUCT DESIGN · v1.0 · 2026.11</p>
+    <h1>城市自由行 App<br><em>把攻略变成可以照着走的一天</em></h1>
+    <p class="lede">这套设计只解决一个问题：用户拿着手机出门，到了下一个时间点，知道下一站在哪、怎么去、来得及吗。所有视觉与交互选择都服从这个目标，而不是让页面看起来更"旅游"。</p>
+    <div class="head-meta">
+      <div><span>设计范围</span><b>P0 核心闭环 · 12 屏</b></div>
+      <div><span>目标平台</span><b>Android 优先 · 390×844</b></div>
+      <div><span>设计语言</span><b>城市手帐</b></div>
+      <div><span>基准城市</span><b>成都 · 2 天</b></div>
+    </div>
+  </header>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">01</span>
+      <h2>四条设计原则</h2>
+      <p>每条都能落到具体界面决定上</p>
+    </div>
+    <div class="principles">
+      <div class="p-card">
+        <p class="n">P1</p>
+        <h3>时间是一等公民</h3>
+        <p>所有卡片以时间开头，用等宽数字对齐。用户扫一眼就能判断"来不来得及"，而不是读一段介绍。</p>
+      </div>
+      <div class="p-card">
+        <p class="n">P2</p>
+        <h3>未知就说未知</h3>
+        <p>营业时间缺失显示"待确认"，不用默认值填成确定事实。宁可少一个信息，不给一个错信息。</p>
+      </div>
+      <div class="p-card">
+        <p class="n">P3</p>
+        <h3>改动即时可见</h3>
+        <p>拖拽先本地预演，半秒内看到新的到达时间，再由服务端复检。等待感来自无反馈，不是来自计算。</p>
+      </div>
+      <div class="p-card">
+        <p class="n">P4</p>
+        <h3>一屏一决策</h3>
+        <p>今天页只回答"下一步做什么"。攻略全文、长篇推荐理由一律不进这一屏。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">02</span>
+      <h2>设计语言</h2>
+      <p>暖纸底 + 墨绿 + 陶土橙，避开旅游产品常见的蓝白渐变</p>
+    </div>
+    <div class="lang">
+      <div class="panel">
+        <h3>Color</h3>
+        <div class="swatches">
+          <div class="sw"><div class="chip" style="background:#17564E"></div><div class="info"><b>墨绿</b><span>#17564E</span></div></div>
+          <div class="sw"><div class="chip" style="background:#0E3A34"></div><div class="info"><b>深墨</b><span>#0E3A34</span></div></div>
+          <div class="sw"><div class="chip" style="background:#C7633B"></div><div class="info"><b>陶土</b><span>#C7633B</span></div></div>
+          <div class="sw"><div class="chip" style="background:#F7F5F0;border-bottom:1px solid #E8E4DB"></div><div class="info"><b>纸底</b><span>#F7F5F0</span></div></div>
+          <div class="sw"><div class="chip" style="background:#E4EFEA"></div><div class="info"><b>浅绿</b><span>#E4EFEA</span></div></div>
+        </div>
+        <div class="metrics" style="margin-top:18px;">
+          <div class="metric"><b>主色 60%</b><span>导航、主按钮、地图路线</span></div>
+          <div class="metric"><b>陶土 10%</b><span>时间、预约、冲突提示</span></div>
+          <div class="metric"><b>纸底 30%</b><span>页面底、分隔、次级块</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Type Scale</h3>
+        <div class="typescale">
+          <div class="ts"><span class="u">27 / 600</span><span class="s" style="font-size:27px;font-weight:600;letter-spacing:-.02em;">周末两天怎么走</span></div>
+          <div class="ts"><span class="u">20 / 600</span><span class="s" style="font-size:20px;font-weight:600;">行程详情</span></div>
+          <div class="ts"><span class="u">14 / 600</span><span class="s" style="font-size:14px;font-weight:600;">宽窄巷子</span></div>
+          <div class="ts"><span class="u">13 / 400</span><span class="s" style="font-size:13px;">正文与推荐理由，行高 1.8</span></div>
+          <div class="ts"><span class="u">11 / 400</span><span class="s" style="font-size:11px;color:#8E9189;">来源、更新时间、辅助说明</span></div>
+        </div>
+        <div class="metrics" style="margin-top:16px;">
+          <div class="metric"><b>4pt</b><span>间距基准</span></div>
+          <div class="metric"><b>14px</b><span>卡片圆角</span></div>
+          <div class="metric"><b>48px</b><span>主按钮高度</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">03</span>
+      <h2>核心组件</h2>
+      <p>开发阶段可直接对应为 Button / Tag / Card / TimelineNode 四类</p>
+    </div>
+    <div class="comp">
+      <div class="panel">
+        <h3>按钮</h3>
+        <button class="btn-primary">生成行程 · 约 15 秒</button>
+        <div style="height:10px"></div>
+        <button class="btn-ghost">换一个附近地点</button>
+        <div style="height:10px"></div>
+        <button class="btn-quiet">跳过这一站</button>
+        <p class="comp-note">主按钮只有一个，永远在拇指区。危险或不可逆操作不用主色。</p>
+      </div>
+      <div class="panel">
+        <h3>标签</h3>
+        <div class="tagrow" style="margin-bottom:14px;">
+          <span class="tag">历史人文</span>
+          <span class="tag clay">需预约</span>
+          <span class="tag line">建议 1.5 小时</span>
+        </div>
+        <div class="tagrow">
+          <span class="tag line">已预约 10:00</span>
+          <span class="tag">步行 8 分钟</span>
+          <span class="tag clay">17:00 停止入场</span>
+        </div>
+        <p class="comp-note">陶土色只表示两类事：时间约束与风险提示。它一旦滥用就失去警示作用。</p>
+      </div>
+      <div class="panel">
+        <h3>时间轴节点</h3>
+        <div style="display:flex;gap:12px;">
+          <div style="width:44px;font-size:12px;font-weight:600;padding-top:6px;font-variant-numeric:tabular-nums;">13:40</div>
+          <div style="position:relative;width:14px;">
+            <div style="position:absolute;left:3px;top:9px;width:8px;height:8px;border-radius:50%;background:#17564E;box-shadow:0 0 0 3px #E4EFEA;"></div>
+            <div style="position:absolute;left:6.5px;top:19px;bottom:-14px;width:1px;background:#E8E4DB;"></div>
+          </div>
+          <div style="flex:1;">
+            <div class="tl-card">
+              <div class="n">宽窄巷子</div>
+              <div class="why">你选了历史，这里步行可达，1.5 小时够走完主街。</div>
+              <div class="foot"><span class="tg g">建议 1.5h</span><span class="tg">步行 8 分</span><span class="swap">换一个</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="comp-note">实心点＝已确定，空心点＝交通/休息段。时间列固定 44px，保证纵向对齐。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">04</span>
+      <h2>出发前</h2>
+      <p>探索 → 城市 → 地点 → 条件</p>
+    </div>
+    <div class="screens">
+
+      <!-- 01 探索 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app with-tab">
+            <div class="nav" style="height:46px;">
+              <div class="loc">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 14.5s5-4.4 5-8A5 5 0 0 0 3 6.5c0 3.6 5 8 5 8Z"/><circle cx="8" cy="6.4" r="1.8"/></svg>
+                成都
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" style="color:#8E9189;"><path d="m2.5 4 2.5 2.5L7.5 4"/></svg>
+              </div>
+              <div class="ic plain">
+                <svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="5.6"/><path d="m13.2 13.2 3.4 3.4"/></svg>
+              </div>
+            </div>
+
+            <div class="pad">
+              <h1 class="h-xl" style="margin-top:4px;">周末两天<br>在成都怎么走</h1>
+              <p class="sub" style="margin-top:9px;">已收录 132 个地点 · 8 条路线 · 6 个片区</p>
+
+              <div class="hero">
+                <div class="glow"></div>
+                <svg class="art" viewBox="0 0 390 120" preserveAspectRatio="none">
+                  <path d="M0 120V74h26V56h30v24h34V42h28v22h32V30h26v32h34V50h28v26h32V44h26v24h34V62h34v20h26v38Z" fill="rgba(255,255,255,.24)"/>
+                </svg>
+                <div class="hero-in">
+                  <p class="hero-kicker">CHENGDU · 2 DAYS</p>
+                  <p class="hero-title">慢一点，也算把这座城走完</p>
+                  <div class="hero-tags"><span>历史人文</span><span>美食</span><span>夜游</span></div>
+                  <div class="hero-btn">
+                    为我安排两天
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h9m0 0L8.5 4.5M12 8l-3.5 3.5"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pad">
+              <div class="sec-row"><h2>主题路线</h2><a>全部 8 条</a></div>
+            </div>
+            <div class="hscroll">
+              <div class="route">
+                <div class="thumb" style="background:linear-gradient(140deg,#2C6E60,#7FAE94)">
+                  <svg width="100%" height="100%" viewBox="0 0 186 54" preserveAspectRatio="none"><path d="M0 54V34h18V22h22v14h24V18h20v20h26V26h22v12h24V20h30v34Z" fill="rgba(255,255,255,.2)"/></svg>
+                </div>
+                <b>老城一日</b><span>6 站 · 步行 4.2km</span>
+              </div>
+              <div class="route">
+                <div class="thumb" style="background:linear-gradient(140deg,#B4703F,#D9A87C)">
+                  <svg width="100%" height="100%" viewBox="0 0 186 54" preserveAspectRatio="none"><path d="M0 54V38c22 0 22-12 44-12s22 12 44 12 22-14 44-14 22 10 54 10v20Z" fill="rgba(255,255,255,.22)"/></svg>
+                </div>
+                <b>吃货半日</b><span>4 站 · 3 顿小吃</span>
+              </div>
+            </div>
+
+            <div class="pad">
+              <div class="sec-row"><h2>精选地点</h2><a>更多</a></div>
+              <div class="place">
+                <div class="pt" style="background:linear-gradient(150deg,#3B7A63,#8FBE9C)"></div>
+                <div class="txt"><b>人民公园 · 鹤鸣茶社</b><span>茶馆 · 建议 1.5h · ￥20 起</span></div>
+                <div class="meta">距你 1.2km</div>
+              </div>
+              <div class="place">
+                <div class="pt" style="background:linear-gradient(150deg,#4A6B7C,#9BB6C2)"></div>
+                <div class="txt"><b>成都博物馆</b><span>博物馆 · 需预约 · 建议 2.5h</span></div>
+                <div class="meta">免费</div>
+              </div>
+            </div>
+
+            <nav class="tabbar">
+              <a class="tab active">
+                <svg width="21" height="21" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5.2-5.2 2.3 2.3-5.2z"/></svg>
+                <span>探索</span>
+              </a>
+              <a class="tab">
+                <svg width="21" height="21" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                <span>行程</span>
+              </a>
+              <a class="tab">
+                <svg width="21" height="21" viewBox="0 0 24 24"><path d="M6 4.5h12v16l-6-4-6 4z"/></svg>
+                <span>收藏</span>
+              </a>
+              <a class="tab">
+                <svg width="21" height="21" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4"/></svg>
+                <span>我的</span>
+              </a>
+            </nav>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">01</span><b>探索 · 城市首页</b></div>
+          <p>不堆信息。一张城市大卡承接"我要去"，两条主题路线给"没想法的人"一个起点，下面才是地点列表。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 02 城市详情 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">9:43</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="citycover">
+              <svg class="art" viewBox="0 0 390 110" preserveAspectRatio="none">
+                <path d="M0 110V66h24V48h28v22h32V38h26v20h30V26h24v30h32V46h26v22h30V40h24v22h32V56h32v18h24v36Z" fill="rgba(255,255,255,.15)"/>
+              </svg>
+              <div class="nav" style="position:relative;z-index:3;">
+                <div class="ic">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>
+                </div>
+                <div class="ic">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 11V3m0 0L4.5 6.5M8 3l3.5 3.5M3 13h10"/></svg>
+                </div>
+              </div>
+              <div class="txt"><p class="k">CHENGDU</p><p class="n">成都</p></div>
+            </div>
+
+            <div class="pad">
+              <p class="bodytext" style="margin:14px 0 0;">一座可以慢慢走的城。老城片区集中在二环以内，两天时间足够走完主街，但需要给茶馆留出空档。</p>
+              <div class="stats">
+                <div><b>132</b><span>地点</span></div>
+                <div><b>8</b><span>路线</span></div>
+                <div><b>6</b><span>片区</span></div>
+                <div><b>2–3</b><span>建议天数</span></div>
+              </div>
+            </div>
+
+            <div class="pad" style="margin-top:6px;">
+              <div class="chips">
+                <div class="chip on">老城片</div>
+                <div class="chip">武侯片</div>
+                <div class="chip">东郊片</div>
+                <div class="chip">玉林片</div>
+              </div>
+            </div>
+
+            <div class="pad" style="margin-top:18px;">
+              <div class="block-title" style="margin-top:0;">按类型找</div>
+              <div class="catgrid">
+                <div class="cat">
+                  <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 20h18M6 20V9l6-4 6 4v11M10 20v-5h4v5"/></svg>
+                  <span>景点</span>
+                </div>
+                <div class="cat">
+                  <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 10h16a8 8 0 0 1-16 0Z"/><path d="M8 6c0-1 1-1 1-2M12 6c0-1 1-1 1-2M16 6c0-1 1-1 1-2"/></svg>
+                  <span>美食</span>
+                </div>
+                <div class="cat">
+                  <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M9 5v14M4 10h5"/></svg>
+                  <span>娱乐</span>
+                </div>
+                <div class="cat">
+                  <svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 19V9a4 4 0 0 1 8 0v10M13 19V9a4 4 0 0 1 8 0v10"/></svg>
+                  <span>休息</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pad" style="margin-top:18px;">
+              <div class="sec-row" style="margin:0 0 10px;"><h2>路线模板</h2><a>全部</a></div>
+              <div class="route" style="width:100%;padding:13px 14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <b style="margin:0;">老城两日 · 经典</b>
+                  <span style="font-size:11px;color:#17564E;">套用</span>
+                </div>
+                <span style="margin-top:4px;display:block;">D1 4 站 · D2 3 站 · 步行 7.4km · 含 2 处茶馆</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">02</span><b>城市详情</b></div>
+          <p>先给判断依据（几天够、几个片区），再给分类入口。片区 chips 是排程的基本单位，用户也需要用同一套语言理解路线。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 03 地点详情 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">9:47</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="dcover">
+              <svg class="art" viewBox="0 0 390 110" preserveAspectRatio="none">
+                <path d="M0 110V72l30-12 24 10 26-22 30 16 22-8 28 14 26-18 30 12 24-6 28 14 26-10 30 12 24-8 32 14v34Z" fill="rgba(255,255,255,.24)"/>
+              </svg>
+              <div class="nav" style="position:relative;z-index:2;">
+                <div class="ic">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>
+                </div>
+                <div class="ic">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 13.5s4.2-3.8 4.2-6.8A4.2 4.2 0 0 0 3.8 6.7c0 3 4.2 6.8 4.2 6.8Z"/><circle cx="8" cy="6.6" r="1.5"/></svg>
+                </div>
+              </div>
+              <div class="badge">景点 · 老城片</div>
+            </div>
+
+            <div class="dhead">
+              <div class="t">宽窄巷子</div>
+              <div class="m"><span>建议停留 1.5 小时</span><span class="dot"></span><span>步行 8 分钟可达下一站</span></div>
+            </div>
+
+            <div class="infobox">
+              <div class="inforow"><span class="k">开放时间</span><span class="v">全天 · 店铺 10:00–22:00</span></div>
+              <div class="inforow"><span class="k">门票</span><span class="v">免费</span></div>
+              <div class="inforow"><span class="k">是否需要预约</span><span class="v">不需要</span></div>
+              <div class="inforow"><span class="k">适合时段</span><span class="v warn">14:00 后人流明显增加</span></div>
+            </div>
+            <div class="src">
+              <svg class="ok" width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.5 7.5 3 3 6-6.5"/></svg>
+              信息更新于 11-01 · 来源：官方公众号
+            </div>
+
+            <p class="bodytext"><b style="font-weight:600;color:#1A1A17;">为什么安排在这里</b><br>你选了历史人文，这一片保留了较完整的街巷尺度。放在午饭后，正好用散步消化，也不会占用整块下午。</p>
+
+            <div style="margin:14px 22px 0;display:flex;gap:8px;">
+              <span class="tag line">小巷多，穿舒服的鞋</span>
+              <span class="tag line">18:00 后灯光更好</span>
+            </div>
+
+            <div class="dbar">
+              <div class="save">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4.5h12v16l-6-4-6 4z"/></svg>
+              </div>
+              <div class="add">加入行程</div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">03</span><b>地点详情</b></div>
+          <p>关键信息全部前置成四行表，来源与更新时间紧跟其后。用户判断"去不去"只需要三秒，不需要读完整篇介绍。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 04 创建条件 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">10:02</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="nav" style="height:48px;">
+              <div class="ic plain">
+                <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8h9"/><path d="M10 3 5 8l5 5" transform="translate(-2)"/></svg>
+              </div>
+              <div class="ttl">创建行程</div>
+              <div class="ic plain" style="font-size:12px;color:#8E9189;">1 / 3</div>
+            </div>
+            <div class="steps"><i class="on"></i><i></i><i></i></div>
+
+            <div class="form">
+              <h1 class="h-l" style="margin-top:20px;">先说说这趟旅行</h1>
+              <p class="sub" style="margin-top:6px;">只填必填项也能出稿，其余可以之后补。</p>
+
+              <div class="field">
+                <p class="lb">目的地</p>
+                <div class="inputrow"><span>成都</span><span class="r">已支持</span></div>
+              </div>
+
+              <div class="field">
+                <p class="lb">日期</p>
+                <div class="inputrow">
+                  <span>11月14日 — 11月15日</span>
+                  <span class="r">2 天</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <p class="lb">旅行节奏</p>
+                <div class="seg">
+                  <div class="s on"><b>轻松</b><span>2 个主要活动</span></div>
+                  <div class="s"><b>标准</b><span>3 个主要活动</span></div>
+                  <div class="s"><b>紧凑</b><span>4 个主要活动</span></div>
+                </div>
+                <p class="hint">每天 <b>约 2 个主要活动</b>，留出茶馆和午休，晚上可自由安排。</p>
+              </div>
+
+              <div class="field">
+                <p class="lb">到达与离开</p>
+                <div style="display:flex;gap:8px;">
+                  <div class="inputrow" style="flex:1;"><span>11:00 到</span><span class="r">成都东站</span></div>
+                  <div class="inputrow" style="flex:1;"><span>17:00 走</span><span class="r">成都东站</span></div>
+                </div>
+              </div>
+
+              <div class="field">
+                <p class="lb">住宿</p>
+                <div class="inputrow" style="border-style:dashed;">
+                  <span style="color:#8E9189;">还没定</span>
+                  <span class="r">按春熙路估算</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="footbtn">
+              <button class="btn-primary">下一步 · 选偏好</button>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">04</span><b>创建 · 条件</b></div>
+          <p>"还没定"是一个正式选项，不是空状态。选了它，结果页会明确写出"按春熙路片区估算"——假设必须可见。</p>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">05</span>
+      <h2>生成与查看</h2>
+      <p>偏好 → 生成 → 时间线 → 地图</p>
+    </div>
+    <div class="screens">
+
+      <!-- 05 偏好 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">10:04</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="nav" style="height:48px;">
+              <div class="ic plain">
+                <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>
+              </div>
+              <div class="ttl">创建行程</div>
+              <div class="ic plain" style="font-size:12px;color:#8E9189;">3 / 3</div>
+            </div>
+            <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+
+            <div class="form">
+              <h1 class="h-l" style="margin-top:20px;">你想怎么玩</h1>
+              <p class="sub" style="margin-top:6px;">最多选五个，点第二下可以加强偏好。</p>
+
+              <div class="field">
+                <p class="lb">兴趣</p>
+                <div class="tags">
+                  <div class="t2 on">历史人文<span class="d"><i class="f"></i><i class="f"></i><i class="f"></i></span></div>
+                  <div class="t2 on">美食<span class="d"><i class="f"></i><i class="f"></i><i></i></span></div>
+                  <div class="t2 on">自然<span class="d"><i class="f"></i><i></i><i></i></span></div>
+                  <div class="t2">拍照</div>
+                  <div class="t2">购物</div>
+                  <div class="t2">演出</div>
+                  <div class="t2">夜游</div>
+                  <div class="t2">亲子</div>
+                </div>
+              </div>
+
+              <div class="field">
+                <p class="lb">人均预算（不含住宿与大交通）</p>
+                <div class="inputrow"><span>￥300 — ￥600 / 天</span><span class="r">含门票与餐饮</span></div>
+              </div>
+
+              <div class="field">
+                <p class="lb">必去</p>
+                <div class="picked">
+                  <div class="l"><b>成都博物馆</b><span>已加入 · 建议 2.5 小时</span></div>
+                  <div class="x">×</div>
+                </div>
+              </div>
+
+              <div class="field">
+                <p class="lb">已预约</p>
+                <div class="picked" style="background:#FBF7F0;border-color:#EDE2CE;">
+                  <div class="l"><b>成都博物馆 · 11月15日 10:00</b><span>该时段会被锁定，不参与重排</span></div>
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#C7633B" stroke-width="1.8"><rect x="2.5" y="4" width="11" height="9.5" rx="2"/><path d="M5.5 2.5V5M10.5 2.5V5"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="footbtn">
+              <button class="btn-primary">生成两天行程</button>
+              <p class="note">预计 15 秒 · 可以先离开，完成后通知你</p>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">05</span><b>创建 · 偏好</b></div>
+          <p>标签用三个点表示强度，点第二下加强。已预约项单独成块并说明"会被锁定"——让用户知道系统会替他守住什么。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 06 生成中 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">10:05</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="gen">
+              <div class="ring">
+                <svg width="96" height="96" viewBox="0 0 96 96">
+                  <circle cx="48" cy="48" r="42" fill="none" stroke="#E8E4DB" stroke-width="6"/>
+                  <circle cx="48" cy="48" r="42" fill="none" stroke="#17564E" stroke-width="6"
+                          stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="88"/>
+                </svg>
+                <div class="pct">67%</div>
+              </div>
+              <h3>正在排出两天的路线</h3>
+              <p class="s">已按片区把候选地点分组，<br>正在检查开放时间与预约场次。</p>
+
+              <div class="gensteps">
+                <div class="genstep done">
+                  <span class="tick">
+                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 5.2 2.1 2.1L8 3.4"/></svg>
+                  </span>
+                  从 132 个地点中筛出 38 个候选
+                </div>
+                <div class="genstep done">
+                  <span class="tick">
+                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 5.2 2.1 2.1L8 3.4"/></svg>
+                  </span>
+                  计算片区之间的步行与公交耗时
+                </div>
+                <div class="genstep now">
+                  <span class="tick"></span>
+                  核对第二天 10:00 的预约场次
+                </div>
+                <div class="genstep todo"><span class="tick"></span>生成备选与未安排清单</div>
+              </div>
+
+              <div class="skel">
+                <div class="row"></div>
+                <div class="row"></div>
+                <div class="row"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">06</span><b>生成中</b></div>
+          <p>不用无意义的转圈。四步进度告诉用户系统在算什么，等待就有了合理的心理预期；骨架屏暗示结果长什么样。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 07 时间线 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">10:06</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="nav" style="height:46px;">
+              <div class="ic plain">
+                <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>
+              </div>
+              <div style="display:flex;gap:14px;color:#5C5F58;">
+                <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 14V9m5 5V4m5 10V7"/></svg>
+                <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 15V3m0 0L4.5 7.5M9 3l4.5 4.5"/></svg>
+              </div>
+            </div>
+
+            <div class="trip-head">
+              <div class="trip-top">
+                <div class="t">成都 · 2 天</div>
+                <div class="save-state">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2.5 6.2 2.3 2.3L9.5 3.8"/></svg>
+                  已保存
+                </div>
+              </div>
+              <div class="daytabs">
+                <div class="daytab on"><b>11月14日</b><span>4 站 · 周五</span></div>
+                <div class="daytab"><b>11月15日</b><span>3 站 · 周六</span></div>
+              </div>
+            </div>
+
+            <div class="overview">
+              <div><b>4</b><span>活动</span></div>
+              <div><b>52′</b><span>交通</span></div>
+              <div><b>4.8km</b><span>步行</span></div>
+              <div><b>￥180</b><span>预估</span></div>
+            </div>
+
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="tl-time">11:00</div>
+                <div class="tl-rail"><span class="node hollow"></span><span class="line"></span></div>
+                <div class="tl-card" style="background:#FBF9F4;">
+                  <div class="n" style="font-size:13px;">抵达 · 成都东站</div>
+                  <div class="why" style="margin-bottom:0;">出站、寄存行李，留 40 分钟缓冲。</div>
+                </div>
+              </div>
+              <div class="transit">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1.5v11M3 5l4-3.5L11 5"/></svg>
+                地铁 2 号线 · 26 分钟
+              </div>
+
+              <div class="tl-item">
+                <div class="tl-time">12:10</div>
+                <div class="tl-rail"><span class="node"></span><span class="line"></span></div>
+                <div class="tl-card">
+                  <div class="n">奎星楼街 · 午餐</div>
+                  <div class="why">你选了美食。这条街离住宿片区近，午市不用排太久。</div>
+                  <div class="foot"><span class="tg g">主选 1 家</span><span class="tg">备选 2 家</span><span class="swap">换一个</span></div>
+                </div>
+              </div>
+              <div class="transit">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10c2.5 0 2.5-6 5-6s2.5 6 5 6"/></svg>
+                步行 12 分钟 · 900m
+              </div>
+
+              <div class="tl-item">
+                <div class="tl-time">13:40</div>
+                <div class="tl-rail"><span class="node"></span><span class="line"></span></div>
+                <div class="tl-card">
+                  <div class="n">宽窄巷子</div>
+                  <div class="why">历史人文偏好命中，主街加两条小巷约 1.5 小时。</div>
+                  <div class="foot"><span class="tg g">建议 1.5h</span><span class="tg">免费</span><span class="swap">换一个</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert">
+              <svg class="ai" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 5v4.2M8 11.4v.2"/><circle cx="8" cy="8" r="6.4"/></svg>
+              <p><b>下一段需留意：</b>人民公园 17:00 后茶座陆续收摊，当前安排 16:10 到达，建议不要延后。</p>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">07</span><b>行程详情 · 时间线</b></div>
+          <p>时间列固定宽度、等宽数字，纵向可扫。交通段夹在两张卡之间而不是塞进卡片，视觉上形成"移动—停留"的节奏。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 08 地图 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">10:08</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="nav" style="height:46px;">
+              <div class="ic plain">
+                <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>
+              </div>
+              <div class="ttl" style="font-size:14px;">11月14日 · 4 站</div>
+              <div class="ic plain">
+                <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 15V3m0 0L4.5 7.5M9 3l4.5 4.5"/></svg>
+              </div>
+            </div>
+
+            <div class="mapwrap">
+              <svg viewBox="0 0 390 322" preserveAspectRatio="none">
+                <rect width="390" height="322" fill="#EFEDE5"/>
+                <path d="M0 236c52-26 96-8 138 6s104 8 152-26v106H0Z" fill="#DFE8DC"/>
+                <path d="M-30 112c70-30 128 26 206 6s150 8 240-18" stroke="#CFDFDA" stroke-width="24" fill="none" stroke-linecap="round"/>
+                <path d="M0 58h390M0 168h390M0 268h390" stroke="#FBF9F3" stroke-width="9" fill="none"/>
+                <path d="M74 0v322M186 0v322M302 0v322" stroke="#FBF9F3" stroke-width="10" fill="none"/>
+                <path d="M74 58h112v110" stroke="#F5F2EA" stroke-width="6" fill="none"/>
+                <path d="M96 222l54-54 78 14 38-62 46-46" stroke="#C7633B" stroke-width="2.4" stroke-dasharray="6 6" fill="none"/>
+                <g font-family="-apple-system,sans-serif" font-size="11" font-weight="600" fill="#fff" text-anchor="middle">
+                  <circle cx="96" cy="222" r="14" fill="#17564E"/><text x="96" y="226">1</text>
+                  <circle cx="150" cy="168" r="14" fill="#17564E"/><text x="150" y="172">2</text>
+                  <circle cx="228" cy="182" r="14" fill="#17564E"/><text x="228" y="186">3</text>
+                  <circle cx="266" cy="120" r="14" fill="#C7633B"/><text x="266" y="124">4</text>
+                  <circle cx="312" cy="74" r="14" fill="#17564E"/><text x="312" y="78">5</text>
+                </g>
+                <circle cx="266" cy="120" r="22" fill="none" stroke="#C7633B" stroke-width="1.2" opacity=".45"/>
+              </svg>
+
+              <div class="mapcard">
+                <div class="num" style="background:#C7633B;">4</div>
+                <div class="tx"><b>人民公园 · 鹤鸣茶社</b><span>16:10 到达 · 建议 1.5h</span></div>
+                <div class="go">详情</div>
+              </div>
+            </div>
+
+            <div class="pad" style="margin-top:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:11px;color:#8E9189;letter-spacing:.06em;">当天顺序</span>
+                <span style="font-size:11px;color:#17564E;">拖动可调整</span>
+              </div>
+              <div class="place" style="padding:10px 0;">
+                <div class="pt" style="width:34px;height:34px;border-radius:9px;background:#17564E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">1</div>
+                <div class="txt" style="margin-left:2px;"><b style="font-size:13px;">成都东站</b><span style="font-size:11px;">11:00 抵达</span></div>
+                <div class="meta">交通</div>
+              </div>
+              <div class="place" style="padding:10px 0;">
+                <div class="pt" style="width:34px;height:34px;border-radius:9px;background:#E4EFEA;color:#0E3A34;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">2</div>
+                <div class="txt" style="margin-left:2px;"><b style="font-size:13px;">奎星楼街</b><span style="font-size:11px;">12:10 · 午餐</span></div>
+                <div class="meta">步行 12′</div>
+              </div>
+              <div class="place" style="padding:10px 0;">
+                <div class="pt" style="width:34px;height:34px;border-radius:9px;background:#E4EFEA;color:#0E3A34;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">3</div>
+                <div class="txt" style="margin-left:2px;"><b style="font-size:13px;">宽窄巷子</b><span style="font-size:11px;">13:40 · 1.5h</span></div>
+                <div class="meta">步行 9′</div>
+              </div>
+              <div class="place" style="padding:10px 0;">
+                <div class="pt" style="width:34px;height:34px;border-radius:9px;background:#F8EAE2;color:#8E3E1E;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">4</div>
+                <div class="txt" style="margin-left:2px;"><b style="font-size:13px;">人民公园 · 茶社</b><span style="font-size:11px;">15:20 · 1.5h</span></div>
+                <div class="meta" style="color:#C7633B;">步行 9′</div>
+              </div>
+              <div class="place" style="padding:10px 0;border-bottom:none;">
+                <div class="pt" style="width:34px;height:34px;border-radius:9px;background:#E4EFEA;color:#0E3A34;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">5</div>
+                <div class="txt" style="margin-left:2px;"><b style="font-size:13px;">晚饭 · 玉林片</b><span style="font-size:11px;">17:30 · 主选 +2</span></div>
+                <div class="meta">公交 16′</div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:#F7F5F0;border-radius:11px;padding:10px 12px;margin-top:10px;">
+                <span style="font-size:11px;color:#5C5F58;">当天小结</span>
+                <span style="font-size:11px;color:#17564E;font-weight:500;">交通 52′ · 步行 4.8km · ￥180</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">08</span><b>行程详情 · 地图</b></div>
+          <p>地图只画当天，避免全城密密麻麻。地图与列表引用同一份顺序数据，拖动任一侧另一侧立即跟随——这是设计红线。</p>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">06</span>
+      <h2>旅行中与沉淀</h2>
+      <p>冲突 → 今天 → 行程库 → 分享</p>
+    </div>
+    <div class="screens">
+
+      <!-- 09 冲突 -->
+      <figure class="screen">
+        <div class="phone" style="background:#EFEDE5;">
+          <div class="statusbar">
+            <span class="sb-time">10:12</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <!-- 背景：模糊的行程片段 -->
+            <div style="filter:blur(2px);opacity:.62;">
+              <div class="nav" style="height:46px;">
+                <div class="ic plain"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg></div>
+                <div class="ttl" style="font-size:14px;">11月14日</div>
+                <div style="width:17px;"></div>
+              </div>
+              <div class="timeline">
+                <div class="tl-item">
+                  <div class="tl-time">13:40</div>
+                  <div class="tl-rail"><span class="node"></span><span class="line"></span></div>
+                  <div class="tl-card"><div class="n">宽窄巷子</div><div class="why">历史人文偏好命中，约 1.5 小时。</div></div>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-time">15:40</div>
+                  <div class="tl-rail"><span class="node"></span><span class="line"></span></div>
+                  <div class="tl-card"><div class="n">成都博物馆</div><div class="why">已预约 16:00 场次。</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="scrim"></div>
+
+            <div class="sheet">
+              <div class="grab"></div>
+              <h3>这个调整会赶不上闭馆</h3>
+              <p class="desc">把宽窄巷子挪到 15:00 后，预计 <b>17:40</b> 到达成都博物馆，该馆 <b>17:00 停止入场</b>，且你已预约 16:00 场次。</p>
+
+              <div class="opt reco">
+                <div class="oi">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2.5 8h11m0 0L10 4.5M13.5 8 10 11.5"/></svg>
+                </div>
+                <div><b>保持原顺序</b><span>宽窄巷子 13:40，博物馆 16:00，均能赶上</span></div>
+              </div>
+
+              <div class="opt">
+                <div class="oi">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="4" width="11" height="9.5" rx="2"/><path d="M5.5 2.5V5M10.5 2.5V5"/></svg>
+                </div>
+                <div><b>宽窄巷子换到第二天上午</b><span>第二天 10:00 之前，需早起 40 分钟</span></div>
+              </div>
+
+              <div class="opt">
+                <div class="oi">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 13.5s4.2-3.8 4.2-6.8A4.2 4.2 0 0 0 3.8 6.7c0 3 4.2 6.8 4.2 6.8Z"/><circle cx="8" cy="6.6" r="1.5"/></svg>
+                </div>
+                <div><b>换一个附近地点</b><span>人民公园茶社，步行 9 分钟，可随时进出</span></div>
+              </div>
+
+              <div class="sheet-actions">
+                <button class="btn-quiet" style="flex:1;">取消调整</button>
+                <button class="btn-primary" style="flex:1.3;height:44px;font-size:14px;">用推荐方案</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">09</span><b>编辑冲突</b></div>
+          <p>不说"时间冲突"，而说清楚"几点到、几点关门、会错过什么"。三个选项按可行性排序，默认推荐不改变用户预约的那个。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 10 今天 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">13:12</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="today-head">
+              <p class="d">11月14日 · 周五 · 第 1 天</p>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+                <p class="t">今天</p>
+                <span style="font-size:11px;color:#C7633B;font-weight:500;">距下一站 28 分钟</span>
+              </div>
+              <div class="progress">
+                <div class="bar"><i></i></div>
+                <span>2 / 6 完成</span>
+              </div>
+            </div>
+
+            <div class="next">
+              <div class="glow2"></div>
+              <p class="k">下一站</p>
+              <p class="n">宽窄巷子</p>
+              <p class="m">步行 12 分钟 · 900m · 13:40 到达</p>
+              <div class="countdown">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5.2"/><path d="M7 4v3.2l2 1.2"/></svg>
+                建议 13:35 出发，避开主街人流
+              </div>
+              <div class="next-actions">
+                <div class="go">
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 15.5s5-4.6 5-8.2A5 5 0 0 0 4 7.3c0 3.6 5 8.2 5 8.2Z"/><circle cx="9" cy="7.2" r="1.7"/></svg>
+                  导航过去
+                </div>
+                <div class="sec">已完成</div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:9px;margin:12px 22px 0;">
+              <button class="btn-quiet" style="flex:1;">跳过这站</button>
+              <button class="btn-quiet" style="flex:1;">换一站</button>
+              <button class="btn-quiet" style="flex:1;">改剩余</button>
+            </div>
+
+            <div class="rest">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:11px;letter-spacing:.14em;color:#8E9189;font-weight:600;">今日剩余</span>
+                <span style="font-size:11px;color:#17564E;">全部</span>
+              </div>
+              <div class="r-row">
+                <div class="tt">15:20</div>
+                <div class="rn">人民公园 · 鹤鸣茶社</div>
+                <div class="rd">1.5h</div>
+              </div>
+              <div class="r-row">
+                <div class="tt">17:30</div>
+                <div class="rn">晚饭 · 玉林片</div>
+                <div class="rd">主选 +2</div>
+              </div>
+              <div class="r-row" style="border-bottom:none;">
+                <div class="tt">19:30</div>
+                <div class="rn">可选 · 九眼桥夜景</div>
+                <div class="rd">可跳过</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">10</span><b>今天</b></div>
+          <p>旅行中只有这一屏。下一站卡片占据视觉中心，三个动作放在拇指区。剩余安排压缩成三行，折叠即可展开。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 11 行程列表 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">21:40</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app with-tab">
+            <div class="list-head">
+              <h2>行程</h2>
+              <div class="ic plain">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 4v12M4 10h12"/></svg>
+              </div>
+            </div>
+
+            <div class="pad" style="margin-top:14px;">
+              <p class="block-title" style="margin-top:0;">进行中</p>
+            </div>
+
+            <div class="tripcard" style="margin-top:0;border-color:rgba(23,86,78,.3);">
+              <div class="cover" style="background:linear-gradient(150deg,#1D6357,#7AAE93);">
+                <svg width="56" height="66" viewBox="0 0 56 66" style="position:absolute;bottom:0;">
+                  <path d="M0 66V46h8V34h10v12h9V28h8v18h9V36h8v30Z" fill="rgba(255,255,255,.22)"/>
+                </svg>
+              </div>
+              <div class="info">
+                <b>成都 · 2 天</b>
+                <div class="meta">11月14日 — 11月15日 · 6 站</div>
+                <div class="bar2"><i></i></div>
+              </div>
+              <div class="right">进行中<br>2 / 6</div>
+            </div>
+
+            <div class="pad">
+              <p class="block-title">即将出发</p>
+            </div>
+            <div class="tripcard" style="margin-top:0;">
+              <div class="cover" style="background:linear-gradient(150deg,#B4703F,#DDB08A);">
+                <svg width="56" height="66" viewBox="0 0 56 66" style="position:absolute;bottom:0;">
+                  <path d="M0 66V48h9V38h9v10h10V32h8v16h9V40h11v26Z" fill="rgba(255,255,255,.22)"/>
+                </svg>
+              </div>
+              <div class="info">
+                <b>西安 · 4 天</b>
+                <div class="meta">12月05日 — 12月08日 · 草稿</div>
+                <div class="bar2"><i style="width:0"></i></div>
+              </div>
+              <div class="right">未生成<br>继续编辑</div>
+            </div>
+
+            <div class="pad">
+              <p class="block-title">已结束</p>
+            </div>
+            <div class="tripcard" style="margin-top:0;">
+              <div class="cover" style="background:linear-gradient(150deg,#4A6B7C,#9BB6C2);">
+                <svg width="56" height="66" viewBox="0 0 56 66" style="position:absolute;bottom:0;">
+                  <path d="M0 66V44h10V34h8v10h10V26h9v18h9V38h10v28Z" fill="rgba(255,255,255,.22)"/>
+                </svg>
+              </div>
+              <div class="info">
+                <b>重庆 · 3 天</b>
+                <div class="meta">10月02日 — 10月04日 · 9 站</div>
+                <div class="bar2"><i style="width:100%"></i></div>
+              </div>
+              <div class="right">已完成<br>可复制</div>
+            </div>
+
+            <nav class="tabbar">
+              <a class="tab">
+                <svg width="21" height="21" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5.2-5.2 2.3 2.3-5.2z"/></svg>
+                <span>探索</span>
+              </a>
+              <a class="tab active">
+                <svg width="21" height="21" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+                <span>行程</span>
+              </a>
+              <a class="tab">
+                <svg width="21" height="21" viewBox="0 0 24 24"><path d="M6 4.5h12v16l-6-4-6 4z"/></svg>
+                <span>收藏</span>
+              </a>
+              <a class="tab">
+                <svg width="21" height="21" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4"/></svg>
+                <span>我的</span>
+              </a>
+            </nav>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">11</span><b>行程列表</b></div>
+          <p>按"进行中 / 即将 / 已结束"分组，进度条直接画在卡片上。已完成行程提供"复制"，这是复用率最高的一步。</p>
+        </figcaption>
+      </figure>
+
+      <!-- 12 分享 -->
+      <figure class="screen">
+        <div class="phone">
+          <div class="statusbar">
+            <span class="sb-time">21:44</span>
+            <span class="sb-right">
+              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="3" width="3" height="8" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 10.4 5.4 7.7a3.8 3.8 0 0 1 5.2 0Z"/><path d="M2.7 4.9a7.6 7.6 0 0 1 10.6 0l-1.4 1.5a5.5 5.5 0 0 0-7.8 0Z"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3.2" stroke="currentColor" fill="none" opacity=".35"/><rect x="2" y="2" width="16.5" height="8" rx="1.6"/><path d="M23 4.2v3.6a2.4 2.4 0 0 0 0-3.6Z" opacity=".4"/></svg>
+            </span>
+          </div>
+          <div class="app">
+            <div class="nav" style="height:48px;">
+              <div class="ic plain">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>
+              </div>
+              <div class="ttl">分享行程</div>
+              <div style="width:34px;"></div>
+            </div>
+
+            <div class="share-preview">
+              <div class="top">
+                <b>成都 · 2 天</b>
+                <span>只读快照</span>
+              </div>
+              <div class="share-line"><span class="n">1</span>奎星楼街 · 午餐 · 12:10</div>
+              <div class="share-line"><span class="n">2</span>宽窄巷子 · 1.5h · 13:40</div>
+              <div class="share-line"><span class="n">3</span>人民公园 · 茶社 · 15:20</div>
+              <div class="share-line" style="opacity:.5;"><span class="n">4</span>晚饭 · 玉林片 · 17:30</div>
+              <p style="font-size:10px;color:#8E9189;margin-top:10px;line-height:1.6;">生成于 11月14日 21:44，不含实时交通与余票信息。</p>
+            </div>
+
+            <div style="margin:16px 22px 0;">
+              <div class="switchrow">
+                <div class="l"><b>隐藏私人备注</b><span>你在行程里写的 6 条笔记</span></div>
+                <div class="sw2"><i></i></div>
+              </div>
+              <div class="switchrow">
+                <div class="l"><b>隐藏住宿位置</b><span>去除酒店名称与精确坐标</span></div>
+                <div class="sw2"><i></i></div>
+              </div>
+              <div class="switchrow" style="border-bottom:none;">
+                <div class="l"><b>链接有效期 7 天</b><span>到期自动失效，可随时撤销</span></div>
+                <div class="sw2"><i></i></div>
+              </div>
+            </div>
+
+            <div class="notice">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#17564E" stroke-width="1.6" style="flex:none;margin-top:1px;"><circle cx="8" cy="8" r="6.2"/><path d="M8 7.2v3.4M8 5.4v.2"/></svg>
+              <span>脱敏在服务端完成。即使去掉酒店名，起终点坐标也可能暴露住宿位置，因此路线的首尾段会被一并省略。</span>
+            </div>
+
+            <div style="margin:16px 22px 0;">
+              <p class="block-title" style="margin:0 0 8px;">这份链接里不会出现</p>
+              <div style="background:#fff;border:1px solid var(--line);border-radius:13px;padding:2px 14px;">
+                <div class="inforow"><span class="k">你的 6 条私人备注</span><span class="v" style="color:#8E9189;font-weight:400;">已隐藏</span></div>
+                <div class="inforow"><span class="k">酒店名称与精确坐标</span><span class="v" style="color:#8E9189;font-weight:400;">已隐藏</span></div>
+                <div class="inforow"><span class="k">路线的首尾两段</span><span class="v" style="color:#8E9189;font-weight:400;">已省略</span></div>
+              </div>
+            </div>
+
+            <div class="footbtn">
+              <button class="btn-primary">生成分享链接</button>
+            </div>
+          </div>
+        </div>
+        <figcaption class="fig">
+          <div class="row"><span class="no">12</span><b>分享设置</b></div>
+          <p>默认全部脱敏，开关是"继续隐藏"而不是"是否隐藏"。提示文案解释了为什么去掉酒店名还不够——这是合规设计，不是文案装饰。</p>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">07</span>
+      <h2>关键流程</h2>
+      <p>六个节点，每步都有明确的系统行为</p>
+    </div>
+    <div class="flow">
+      <div class="step">
+        <p class="k">STEP 1</p>
+        <b>选城市</b>
+        <p>探索页进入，或直接搜索城市。默认展示已支持城市，未开放城市不给出入口。</p>
+      </div>
+      <div class="step">
+        <p class="k">STEP 2</p>
+        <b>填条件</b>
+        <p>三步向导。必填只有城市、日期、节奏；其余可跳过，跳过项在结果页标注假设。</p>
+      </div>
+      <div class="step">
+        <p class="k">STEP 3</p>
+        <b>生成</b>
+        <p>异步任务，可离开页面。锚点固定 → 片区聚类 → 贪心插入 → 局部改进。</p>
+      </div>
+      <div class="step">
+        <p class="k">STEP 4</p>
+        <b>调整</b>
+        <p>拖动即预演，服务端复检。冲突给出三个可执行选项，不自动改签预约。</p>
+      </div>
+      <div class="step">
+        <p class="k">STEP 5</p>
+        <b>当天使用</b>
+        <p>今天页只回答"下一步"。完成、跳过、换一站、改剩余四个动作。</p>
+      </div>
+      <div class="step">
+        <p class="k">STEP 6</p>
+        <b>保存与分享</b>
+        <p>自动版本 + 只读快照。脱敏在服务端，撤销即时生效。</p>
+      </div>
+    </div>
+    <p class="flow-note">任何一步失败，都有明确出口：地图挂了用估算并标注"待确认"，AI 超时回落规则与模板，保存失败转本地草稿，多端冲突保留双方版本要求用户选择。<b style="font-weight:600;">不允许静默失败</b>——这是这类产品最容易犯、也最不可原谅的错。</p>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="idx">08</span>
+      <h2>交接给开发</h2>
+      <p>设计确认后按这个顺序落地</p>
+    </div>
+    <div class="handoff">
+      <div class="panel">
+        <h4>先做骨架</h4>
+        <ul>
+          <li>Flutter 项目 + 路由 + 主题令牌（颜色、字号、圆角写成 ThemeData）</li>
+          <li>四个 Tab 壳 + 空态占位，先跑通导航</li>
+          <li>本地 SQLite 建三张表：trip、trip_item、place_cache</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>再做内容</h4>
+        <ul>
+          <li>城市 / 地点 / 详情三页，先接本地样例数据</li>
+          <li>地点卡片与时间轴做成通用组件，后续复用</li>
+          <li>信息表统一走"字段 + 来源 + 更新时间"三元组</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>最后做排程</h4>
+        <ul>
+          <li>先实现约束校验（开放、场次、返程余量），再实现打分</li>
+          <li>生成结果先用假数据打通编辑与冲突弹层</li>
+          <li>今天页与行程详情共用同一份顺序数据源</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="page-foot">
+    <span>城市自由行 App · 产品设计 v1.0</span>
+    <span>配套文档：《城市自由行 App 产品需求与规划设计》</span>
+  </footer>
+
+</div>
+<script>
+/* 仅供设计稿分屏截图使用：带 ?shot=N 时把页面向上偏移 N 像素 */
+(function(){
+  var m = location.search.match(/[?&]shot=(\d+)/);
+  if (m) { document.body.style.marginTop = "-" + m[1] + "px"; document.body.setAttribute("data-shot","1"); }
+})();
+</script>
+</body>
+</html>

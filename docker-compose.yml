@@ -1,0 +1,36 @@
+services:
+  api:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 5179
+      DB_PATH: /data/citywalk.db
+      # 必填：用 openssl rand -hex 32 生成，不要用默认值
+      JWT_SECRET: ${JWT_SECRET:?请先在 .env 里设置 JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      SHARE_TTL_DAYS: ${SHARE_TTL_DAYS:-7}
+    volumes:
+      - ./data:/data
+    ports:
+      # 只暴露给宿主机本机，公网访问统一走 web 的 nginx
+      - "127.0.0.1:5179:5179"
+    healthcheck:
+      test:
+        ['CMD', 'node', '-e', "fetch('http://127.0.0.1:5179/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      args:
+        VITE_API_BASE: ""
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
