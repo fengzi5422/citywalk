@@ -33,14 +33,55 @@ vi .env                     # 按需填写下面表格中的项
 
 `.env` 关键项：
 
-| 变量 | 同源部署取值 | 说明 |
+| 变量 | 生效时机 | 说明 |
 | --- | --- | --- |
-| `JWT_SECRET` | **必填** | 32+ 字符随机值；`deploy.sh` 会校验，生产环境拒绝默认密钥 |
-| `CORS_ORIGINS` | 保持默认 | 同源部署时浏览器不触发跨域，只有前后端分离才改成前端域名 |
-| `VITE_API_BASE` | 留空 | 留空走 nginx 反代 `/api`；仅前后端分离时填后端地址 |
-| `VITE_TIANDITU_TK` | 可选 | 浏览器端 key；需在天地图控制台把正式域名加入 Referer 白名单 |
-| `VITE_TIANDITU_AUDIT_NO` | 正式发布必填 | 真实审图号；留空时地图页会明确提示，不会编造编号 |
-| `SHARE_TTL_DAYS` | `7` | 分享链接有效期（天） |
+| `JWT_SECRET` | 后端运行期 | 32+ 字符随机值，`deploy.sh` 会校验；只由后端使用 |
+| `CORS_ORIGINS` | 后端运行期 | 跨域白名单，精确匹配 Origin；纯网页同源可留默认 |
+| `VITE_API_BASE` | **前端构建期** | 留空 = 同源 `/api`；混合部署填网页自己的 https 域名 |
+| `VITE_TIANDITU_TK` | **前端构建期** | 浏览器端 key，受 Referer 白名单限制 |
+| `VITE_TIANDITU_AUDIT_NO` | **前端构建期** | 天地图公示的审图号，网页与 App 填同一个 |
+| `SHARE_TTL_DAYS` | 后端运行期 | 分享链接有效期，默认 7 |
+
+> `VITE_*` 是 Vite **构建时**写进 JS 的常量，不是运行期配置：改了必须重新 `npm run build`（Compose 部署时重跑 `deploy.sh`），原生 App 还要 `npx cap sync android` 后重新打 APK。一份 `dist` / 一个 APK 只能有一个值。
+
+### 网页 + App 混合部署怎么填
+
+后端在服务器、前端既有浏览器又有原生 App 时，推荐**一份前端产物通吃两端**——把 `VITE_API_BASE` 填成「网页自己的域名」，而不是单独的 api 子域：
+
+```bash
+# 假设网页与 /api 都在 https://citywalk.example.com（nginx 把 /api 反代到 api 容器）
+JWT_SECRET=<openssl rand -hex 32 的输出>
+CORS_ORIGINS=https://citywalk.example.com,https://localhost,capacitor://localhost
+VITE_API_BASE=https://citywalk.example.com
+VITE_TIANDITU_TK=<浏览器端 key，白名单填 citywalk.example.com>
+VITE_TIANDITU_AUDIT_NO=<天地图官网公示的审图号>
+SHARE_TTL_DAYS=7
+```
+
+| 前端 | 请求链路 | 是否跨域 |
+| --- | --- | --- |
+| 浏览器 | `https://citywalk.example.com/api/...` → nginx → `api:5179` | 同源，不触发 CORS |
+| Android App（origin `https://localhost`） | 同一绝对地址 → nginx → `api:5179` | 跨域，白名单需含 `https://localhost` |
+| iOS App（origin `capacitor://localhost`） | 同上 | 跨域，白名单需含 `capacitor://localhost` |
+
+要点：
+
+- **App 必须 HTTPS**。Android 高版本默认禁止明文 HTTP，直接用 `http://123.57.92.56:8080` 会连不上；先把域名解析到该 IP，用 Caddy 或 nginx + certbot 配证书。
+- **照抄模板里的 `CORS_ORIGINS=http://localhost:8080` 会让 App 返回 403**（后端按 Origin 精确匹配）。务必换成上表三个来源，不带路径、不带尾部斜杠。
+- 若坚持让网页端留空 `VITE_API_BASE` 走同源反代，App 就必须单独构建一份注入绝对地址的产物，需维护两份 dist；不推荐。
+- `JWT_SECRET` 只在后端，任何 `VITE_*` 里都不要放密钥（会被打进前端 JS，任何人可读）。
+
+### 地图相关变量（网页与 App 的差异）
+
+`VITE_TIANDITU_AUDIT_NO` 填天地图官网公示的审图号（形如 `GS(2025)xxxx号`）。网页与 App 展示的是同一份天地图底图，**填同一个值、没有平台区别**；地图角标与说明段由同一个组件渲染，两端都会显著标注来源与审图号。需要注意的是：按自然资源部与工信部关于规范 App 登载使用地图行为的通知，App 主办者除标注审图号外，还可能需履行地图审核程序与 ICP 备案，应用商店上架时常要求提供相关材料——这是**上线流程**的差异，不是变量值的差异。自有「示意图」不加载第三方瓦片，标注为「示意图 · 自有示例数据」。
+
+`VITE_TIANDITU_TK` 才是真正有平台差异的一项：天地图 key 分浏览器端（校验 Referer 域名）、移动端（校验应用 ID / 包名与签名）、服务端（校验 IP 白名单）。本项目在 WebView 里直接拼 WMTS 瓦片 URL，浏览器端 key 在原生 App 里可能因 Referer 不匹配返回 403。可选做法：
+
+1. **最省事**：App 端不注入 key，用离线示意图底图（默认降级，功能不受影响，也不涉及第三方瓦片标注）。
+2. 在「我的 → 地图底图」里为 App 单独填入实测可用的 key（key 只存本机，不进备份文件）。
+3. 由后端代理瓦片请求（服务端 key + 服务器 IP 白名单），网页与 App 都走自己的域名——需额外开发。
+
+正式上线前请在天地图控制台按实际客户端类型分别建应用并实测，不要混用 key。
 
 ```bash
 # 5. 一键构建 + 启动 + 健康检查
