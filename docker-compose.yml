@@ -9,6 +9,7 @@ services:
       DB_PATH: /data/citywalk.db
       # 必填：用 openssl rand -hex 32 生成，不要用默认值
       JWT_SECRET: ${JWT_SECRET:?请先在 .env 里设置 JWT_SECRET}
+      # 同源部署时浏览器不触发跨域；仅前后端分离部署才需要改这项
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
       SHARE_TTL_DAYS: ${SHARE_TTL_DAYS:-7}
     volumes:
@@ -28,7 +29,8 @@ services:
       context: .
       dockerfile: app/Dockerfile
       args:
-        VITE_API_BASE: ""
+        # 同源部署留空；前后端分离部署时在 .env 里设 VITE_API_BASE=https://api.example.com
+        VITE_API_BASE: ${VITE_API_BASE:-}
     restart: unless-stopped
     depends_on:
       - api
