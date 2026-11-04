@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import type { Trip } from '../core/types'
 import type { BaseMapSetting } from '../core/mapConfig'
 import type { Auth } from '../core/auth'
+import type { LegalTab } from './Legal'
+import { readFileAsText } from '../core/backup'
 import { Arrow, Check, Info, Pin } from '../components/Icons'
 
 type Props = {
@@ -14,20 +16,29 @@ type Props = {
   onLogout: () => void
   onHistory: () => void
   onRefresh: () => void
+  onLegal: (tab: LegalTab) => void
+  onExport: () => void
+  onImport: (text: string) => { ok: boolean; message: string }
+  onDeleteAccount: () => Promise<boolean>
   onBasemapChange: (next: BaseMapSetting) => void
   onClear: () => void
 }
 
-export default function Me({ trips, basemap, auth, syncing, historyCount, onLogin, onLogout, onHistory, onRefresh, onBasemapChange, onClear }: Props) {
+export default function Me({
+  trips, basemap, auth, syncing, historyCount,
+  onLogin, onLogout, onHistory, onRefresh, onLegal, onExport, onImport, onDeleteAccount,
+  onBasemapChange, onClear,
+}: Props) {
   const [tk, setTk] = useState(basemap.tk)
   const [showTk, setShowTk] = useState(false)
   const [tip, setTip] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const useTdt = basemap.mode === 'tianditu' && basemap.tk.trim().length > 0
 
   const pickSchematic = () => {
     onBasemapChange({ mode: 'schematic', tk })
-    setTip('')
+    setTip('已切换为示意图，离线也能打开。')
   }
 
   const pickTianditu = () => {
@@ -40,11 +51,32 @@ export default function Me({ trips, basemap, auth, syncing, historyCount, onLogi
     setTip('已切换，打开任意行程的地图即可查看。')
   }
 
+  const onPickFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await readFileAsText(file)
+      const r = onImport(text)
+      setTip(r.message)
+    } catch (err) {
+      setTip(err instanceof Error ? err.message : '文件读取失败')
+    }
+    e.target.value = ''
+  }
+
+  const onDelete = async () => {
+    if (!confirm('注销账号会删除服务端全部行程、收藏、历史与分享，并清空本机数据。此操作不可恢复，确定继续？')) return
+    const done = await onDeleteAccount()
+    setTip(done ? '账号已注销，本机数据已清空' : '注销失败：服务端不可用，请稍后重试')
+  }
+
   return (
     <div style={{ paddingBottom: 20 }}>
       <div className="list-head">
         <h2>我的</h2>
       </div>
+
+      {tip && <div className="me-tip" onClick={() => setTip('')}>{tip}</div>}
 
       <div className="pad" style={{ marginTop: 12 }}>
         {auth ? (
@@ -138,8 +170,7 @@ export default function Me({ trips, basemap, auth, syncing, historyCount, onLogi
           <p className="hint">
             在 <b>console.tianditu.gov.cn</b> 注册后创建应用，类型选「浏览器端」，把 <b>127.0.0.1</b> 加进白名单。key 只保存在本机浏览器。
           </p>
-          {tip && <p className="hint" style={{ color: 'var(--green)' }}>{tip}</p>}
-          {useTdt && !tip && <p className="hint" style={{ color: 'var(--green)' }}>当前使用天地图底图。</p>}
+          {useTdt && <p className="hint" style={{ color: 'var(--green)' }}>当前使用天地图底图。</p>}
         </div>
 
         {useTdt && (
@@ -174,6 +205,18 @@ export default function Me({ trips, basemap, auth, syncing, historyCount, onLogi
             : '未登录时数据只在本机；清理浏览器数据会丢失。登录后可跨设备同步。'}
         </p>
 
+        <p className="block-title" style={{ marginTop: 18 }}>数据管理</p>
+        <button className="inputrow" onClick={() => { onExport(); setTip('备份已下载到本机，请妥善保管') }}>
+          <span>导出本机备份</span>
+          <span style={{ color: 'var(--ink-3)', fontSize: 12 }}>JSON ›</span>
+        </button>
+        <button className="inputrow" onClick={() => fileRef.current?.click()}>
+          <span>导入备份</span>
+          <span style={{ color: 'var(--ink-3)', fontSize: 12 }}>保守合并 ›</span>
+        </button>
+        <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onPickFile} />
+        <p className="hint">备份包含行程、收藏与历史记录，不含密码与天地图 key。</p>
+
         <button
           className="inputrow dashed"
           style={{ marginTop: 12, justifyContent: 'center', color: 'var(--warn)' }}
@@ -181,13 +224,22 @@ export default function Me({ trips, basemap, auth, syncing, historyCount, onLogi
         >
           清空本机数据
         </button>
+        {auth && (
+          <button
+            className="inputrow dashed"
+            style={{ marginTop: 10, justifyContent: 'center', color: 'var(--warn)' }}
+            onClick={onDelete}
+          >
+            注销账号并删除云端数据
+          </button>
+        )}
       </div>
 
       <div className="pad" style={{ marginTop: 22 }}>
         <p className="block-title" style={{ marginTop: 0 }}>关于</p>
         <div className="infobox" style={{ margin: 0 }}>
-          <div className="inforow"><span className="k">版本</span><span className="v">v0.1.0 · 演示版</span></div>
-          <div className="inforow"><span className="k">数据</span><span className="v">20 个示例地点</span></div>
+          <div className="inforow"><span className="k">版本</span><span className="v">v0.9.0 · 候选交付版</span></div>
+          <div className="inforow"><span className="k">数据</span><span className="v">20 个示例地点（成都）</span></div>
           <div className="inforow"><span className="k">排程</span><span className="v">规则引擎 · 本地运算</span></div>
           <div className="inforow">
             <span className="k">地图</span>
@@ -196,10 +248,23 @@ export default function Me({ trips, basemap, auth, syncing, historyCount, onLogi
         </div>
       </div>
 
+      <div className="pad" style={{ marginTop: 18 }}>
+        <p className="block-title" style={{ marginTop: 0 }}>条款与说明</p>
+        <button className="inputrow" onClick={() => onLegal('terms')}>
+          <span>用户协议</span><span style={{ color: 'var(--ink-3)', fontSize: 12 }}>›</span>
+        </button>
+        <button className="inputrow" onClick={() => onLegal('privacy')}>
+          <span>隐私政策</span><span style={{ color: 'var(--ink-3)', fontSize: 12 }}>›</span>
+        </button>
+        <button className="inputrow" onClick={() => onLegal('disclaimer')}>
+          <span>免责声明</span><span style={{ color: 'var(--ink-3)', fontSize: 12 }}>›</span>
+        </button>
+      </div>
+
       <div className="alert info" style={{ marginTop: 16 }}>
         <span style={{ color: 'var(--green-deep)', marginTop: 1 }}><Info /></span>
         <p>
-          <b>这是替代资源的开发版本。</b>开放时间、门票、交通耗时均为示例值，用于验证排程逻辑与交互；上线前需接入真实数据，并按规划文档第九章的合规清单逐项确认。
+          <b>本版本为候选交付版。</b>开放时间、门票、交通耗时均为示例值；正式发布前需接入真实内容数据、标注真实审图号，并完成合规清单确认。详见「免责声明」。
         </p>
       </div>
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { PLACES } from './data/places'
 import { generatePlan } from './core/scheduler'
 import { recomputeDay } from './core/day'
@@ -11,6 +11,7 @@ import {
   appendHistory, loadHistory, makeEvent, mergeHistory, saveHistory,
   type HistoryEvent,
 } from './core/history'
+import { buildBackup, downloadBackup, mergeBackupTrips, parseBackup } from './core/backup'
 import type { Prefs, Trip } from './core/types'
 import { StatusBar, TabBar, type TabKey } from './components/Chrome'
 import Explore from './screens/Explore'
@@ -25,6 +26,7 @@ import Me from './screens/Me'
 import History from './screens/History'
 import Login from './screens/Login'
 import ShareView from './screens/ShareView'
+import Legal, { type LegalTab } from './screens/Legal'
 
 export type Route =
   | { name: 'explore' }
@@ -32,6 +34,7 @@ export type Route =
   | { name: 'saved' }
   | { name: 'me' }
   | { name: 'history' }
+  | { name: 'legal'; tab?: LegalTab }
   | { name: 'city' }
   | { name: 'place'; id: string }
   | { name: 'create'; templateId?: string }
@@ -47,6 +50,31 @@ const PULL_INTERVAL = 30_000
 function readShareToken(): string | null {
   const m = location.hash.match(/^#\/s\/([a-z0-9]+)/i)
   return m ? m[1] : null
+}
+
+/** 桌面宽屏时的展示性侧栏；手机端隐藏。模块级定义，避免重挂子树。 */
+function DeskShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="desk">
+      <aside className="desk-aside" aria-hidden="true">
+        <div className="desk-brand">
+          <span className="desk-kicker">CITYWALK · 城市自由行</span>
+          <h2>一座城，<br />慢慢走。</h2>
+          <p>为国内城市 1—5 天自由行，生成一份路线合理、可随时修改、旅行中能直接用的按天日程。</p>
+        </div>
+        <div className="desk-points">
+          <div><b>01</b><span><strong>路线合理</strong><em>片区聚类 + 时间约束，不把一天排成赶场</em></span></div>
+          <div><b>02</b><span><strong>随时可改</strong><em>换一站、跳过、换天，后续时间自动顺延</em></span></div>
+          <div><b>03</b><span><strong>旅行能用</strong><em>今天页、离线可开、记录持续保存</em></span></div>
+        </div>
+        <div className="desk-foot">
+          <span>v0.9.0 · 候选交付版</span>
+          <span>内容为成都示例数据，用于验证交互与排程</span>
+        </div>
+      </aside>
+      {children}
+    </div>
+  )
 }
 
 function load<T>(key: string, fallback: T): T {
@@ -67,6 +95,18 @@ export default function App() {
   const [syncing, setSyncing] = useState(false)
   const [history, setHistory] = useState<HistoryEvent[]>(() => loadHistory())
   const [tick, setTick] = useState(0)
+  const [online, setOnline] = useState(() => navigator.onLine)
+
+  useEffect(() => {
+    const on = () => setOnline(true)
+    const off = () => setOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => {
+      window.removeEventListener('online', on)
+      window.removeEventListener('offline', off)
+    }
+  }, [])
 
   const pushedAt = useRef<Map<string, number>>(new Map())
   const stateAtRef = useRef<number>(Number(localStorage.getItem(STATE_AT_KEY)) || 0)
@@ -267,10 +307,56 @@ export default function App() {
     if (retryTimer.current) clearTimeout(retryTimer.current)
   }
 
+  /** 导出本机完整备份（不含密码与天地图 key） */
+  const handleExport = () => {
+    downloadBackup(buildBackup({ trips, saved, history, stateAt: stateAtRef.current }))
+  }
+
+  /** 导入备份：保守合并，不会用较旧的数据覆盖本机较新的行程 */
+  const handleImport = (text: string): { ok: boolean; message: string } => {
+    try {
+      const b = parseBackup(text)
+      setTrips((cur) => mergeBackupTrips(cur, b.trips))
+      setSaved((cur) => Array.from(new Set([...cur, ...b.saved])))
+      setHistory((h) => appendHistory(h, b.history))
+      return {
+        ok: true,
+        message: `已导入 ${b.trips.length} 份行程、${b.saved.length} 个收藏、${b.history.length} 条记录`,
+      }
+    } catch (err) {
+      return { ok: false, message: err instanceof Error ? err.message : '备份文件无法识别' }
+    }
+  }
+
+  /** 注销账号：删除服务端全部关联数据，并清空本机数据 */
+  const handleDeleteAccount = async (): Promise<boolean> => {
+    const done = await api.deleteAccount()
+    if (!done) return false
+    clearAuth()
+    setAuth(null)
+    pushedAt.current.clear()
+    pushedStateRef.current = ''
+    setTrips([])
+    setSaved([])
+    setHistory([])
+    try {
+      const keys: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('citywalk.')) keys.push(k)
+      }
+      keys.forEach((k) => localStorage.removeItem(k))
+    } catch {
+      // 隐私模式下忽略
+    }
+    setRoute({ name: 'me' })
+    return true
+  }
+
   const activeTab: TabKey =
     ['explore', 'list', 'saved', 'me'].includes(route.name)
       ? (route.name as TabKey)
-      : route.name === 'history' ? 'me'
+      : route.name === 'history' || route.name === 'legal' ? 'me'
         : route.name === 'city' || route.name === 'place' || route.name === 'create'
           ? 'explore'
           : 'list'
@@ -365,24 +451,29 @@ export default function App() {
 
   if (shareToken) {
     return (
-      <div className="phone">
-        <StatusBar />
-        <div className="screen">
-          <ShareView
-            token={shareToken}
-            onExit={() => {
-              window.history.replaceState(null, '', location.pathname)
-              setShareToken(null)
-            }}
-          />
+      <DeskShell>
+        <div className="phone">
+          <StatusBar />
+          {!online && <div className="offline-bar">当前离线 · 已缓存的内容仍可查看</div>}
+          <div className="screen">
+            <ShareView
+              token={shareToken}
+              onExit={() => {
+                window.history.replaceState(null, '', location.pathname)
+                setShareToken(null)
+              }}
+            />
+          </div>
         </div>
-      </div>
+      </DeskShell>
     )
   }
 
   return (
-    <div className="phone">
-      <StatusBar />
+    <DeskShell>
+      <div className="phone">
+        <StatusBar />
+        {!online && <div className="offline-bar">当前离线 · 改动先存本机，联网后自动同步</div>}
 
       <div className="screen">
         {route.name === 'explore' && (
@@ -488,6 +579,10 @@ export default function App() {
           />
         )}
 
+        {route.name === 'legal' && (
+          <Legal tab={route.tab} onBack={() => go({ name: 'me' })} />
+        )}
+
         {route.name === 'me' && (
           <Me
             trips={trips}
@@ -498,6 +593,10 @@ export default function App() {
             onLogout={handleLogout}
             onHistory={() => go({ name: 'history' })}
             onRefresh={refresh}
+            onLegal={(tab) => go({ name: 'legal', tab })}
+            onExport={handleExport}
+            onImport={handleImport}
+            onDeleteAccount={handleDeleteAccount}
             basemap={basemap}
             onBasemapChange={updateBasemap}
             onClear={() => {
@@ -517,6 +616,7 @@ export default function App() {
           onChange={(t) => go({ name: t } as Route)}
         />
       )}
-    </div>
+      </div>
+    </DeskShell>
   )
 }

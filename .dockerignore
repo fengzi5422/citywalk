@@ -1,0 +1,20 @@
+# Docker 构建上下文黑名单：不要把本机密钥、数据库、截图与依赖带进镜像
+.git
+.gitignore
+.workbuddy
+**/node_modules
+**/dist
+**/.env.local
+**/.env
+**/*.db
+**/*.db-wal
+**/*.db-shm
+data/
+backups/
+app/shots/
+server/data/
+output/
+design/
+app/docs/
+*.md
+*.tsbuildinfo

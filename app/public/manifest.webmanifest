@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "城市自由行 · 行程规划与随行助手",
+  "short_name": "城市自由行",
+  "description": "为国内城市 1—5 天自由行生成路线合理、可随时修改、旅行中能直接用的按天日程。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F5F0",
+  "theme_color": "#F7F5F0",
+  "categories": ["travel", "navigation", "lifestyle"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

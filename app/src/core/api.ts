@@ -88,6 +88,9 @@ export const api = {
 
   me: () => req<{ id: string; email: string }>('/api/me'),
 
+  /** 注销账号：删除服务端全部关联数据，不可恢复 */
+  deleteAccount: () => req<{ deleted: boolean }>('/api/me', { method: 'DELETE' }),
+
   listTrips: () => req<RemoteTrip[]>('/api/trips'),
 
   putTrip: (trip: Trip) =>

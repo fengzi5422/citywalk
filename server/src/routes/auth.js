@@ -48,4 +48,24 @@ export default async function authRoutes(app) {
     if (!row) return { ok: false, error: '账号不存在' }
     return { ok: true, data: { id: row.id, email: row.email, createdAt: row.created_at } }
   })
+
+  /** 注销账号：显式删除全部关联数据，不依赖外键级联，便于审计 */
+  app.delete('/api/me', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const db = getDb()
+    const userId = req.user.sub
+    const tables = ['shares', 'events', 'trip_versions', 'user_state', 'trips']
+    db.exec('BEGIN IMMEDIATE')
+    try {
+      for (const table of tables) {
+        db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(userId)
+      }
+      const info = db.prepare('DELETE FROM users WHERE id = ?').run(userId)
+      db.exec('COMMIT')
+      return { ok: true, data: { deleted: info.changes === 1 } }
+    } catch (err) {
+      db.exec('ROLLBACK')
+      req.log.error(err)
+      return reply.code(500).send({ ok: false, error: '注销失败，请稍后重试' })
+    }
+  })
 }

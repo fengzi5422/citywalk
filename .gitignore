@@ -17,6 +17,7 @@ build/
 server/data/*.db
 server/data/*.db-*
 data/
+backups/
 
 # 日志与临时文件
 *.log

@@ -77,3 +77,9 @@ export const Ticket = (p: P) => (
 export const Cup = (p: P) => (
   <svg {...S({ ...p, size: p.size ?? 26 })} viewBox="0 0 24 24" strokeWidth={1.5}><path d="M5 19V9a4 4 0 0 1 8 0v10M13 19V9a4 4 0 0 1 8 0v10" /></svg>
 )
+export const Shield = (p: P) => (
+  <svg {...S(p)}><path d="M8 1.8 3 3.6v4.1c0 3 2.1 5.4 5 6.5 2.9-1.1 5-3.5 5-6.5V3.6L8 1.8Z" /><path d="m6 8 1.5 1.5L10 6.8" /></svg>
+)
+export const FileText = (p: P) => (
+  <svg {...S(p)}><path d="M4 1.8h5.2L12.5 5v9.2H4V1.8Z" /><path d="M9 1.8V5h3.5M6.2 8h4.4M6.2 10.5h4.4" /></svg>
+)

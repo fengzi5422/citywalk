@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { PLACES } from '../data/places'
 import type { DayPlan } from '../core/types'
 import { fmt, short } from '../core/time'
 import { transportLabel } from '../core/scheduler'
-import MapLibreMap from './MapLibreMap'
 import type { BaseMapSetting } from '../core/mapConfig'
+import { AUDIT_NO } from '../core/mapConfig'
+
+// 地图引擎体积较大，只有切到「地图」视图才加载，首屏不背这个包
+const MapLibreMap = lazy(() => import('./MapLibreMap'))
 
 type Props = {
   day: DayPlan
@@ -27,8 +30,14 @@ export default function DayMap({ day, onPlace, basemap, onBasemapChange }: Props
   return (
     <div>
       <div className="mapwrap">
-        <MapLibreMap day={day} selected={sel} onSelect={setSel} basemap={basemap} onTileFail={() => setTileFailed(true)} />
-        <div className="mapscale">{basemap.mode === 'tianditu' && basemap.tk.trim() ? '底图 © 天地图' : '示意图 · 自有示例数据'}</div>
+        <Suspense fallback={<div className="map-loading">正在加载地图…</div>}>
+          <MapLibreMap day={day} selected={sel} onSelect={setSel} basemap={basemap} onTileFail={() => setTileFailed(true)} />
+        </Suspense>
+        <div className="mapscale">
+          {useTdtActive(basemap)
+            ? (AUDIT_NO ? `底图 © 天地图 · ${AUDIT_NO}` : '底图 © 天地图')
+            : '示意图 · 自有示例数据'}
+        </div>
       </div>
 
       {tileFailed && useTdtActive(basemap) && (
@@ -101,8 +110,8 @@ export default function DayMap({ day, onPlace, basemap, onBasemapChange }: Props
       </div>
 
       <p className="assume" style={{ marginTop: 10 }}>
-        {basemap.mode === 'tianditu' && basemap.tk.trim()
-          ? '底图来自天地图，审图号以天地图官网公示为准；点位与路线为本应用数据，不提供导航。'
+        {useTdtActive(basemap)
+          ? `底图来自天地图（${AUDIT_NO ? `审图号 ${AUDIT_NO}` : '审图号以天地图官网公示为准，正式发布前须申请并标注'}）；点位、路线与耗时均为本应用示例数据与估算，不提供导航。`
           : '底图为自有示例数据（片区、环线、水系均为示意），不含第三方地图瓦片，也不提供导航。'}
       </p>
     </div>

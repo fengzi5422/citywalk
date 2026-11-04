@@ -2,7 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import { config } from './config.js'
-import { initDb, closeDb } from './db.js'
+import { initDb, closeDb, getDb } from './db.js'
 import authRoutes from './routes/auth.js'
 import tripRoutes from './routes/trips.js'
 import shareRoutes from './routes/shares.js'
@@ -35,13 +35,22 @@ app.decorate('authenticate', async function authenticate(req, reply) {
   } catch {
     return reply.code(401).send({ ok: false, error: '未登录或登录已过期' })
   }
+  // JWT 是无状态的：账号注销后签名仍然有效，必须确认用户还存在，
+  // 否则已注销的账号仍能用旧 token 继续读写接口。
+  try {
+    const exists = getDb().prepare('SELECT 1 FROM users WHERE id = ?').get(req.user.sub)
+    if (!exists) return reply.code(401).send({ ok: false, error: '账号不存在或已注销' })
+  } catch (err) {
+    req.log.error(err)
+    return reply.code(500).send({ ok: false, error: '服务器开小差了' })
+  }
 })
 
 app.get('/api/health', async () => ({
   ok: true,
   data: {
     service: 'citywalk-server',
-    version: '0.1.0',
+    version: '0.9.0',
     uptime: Math.round(process.uptime()),
     time: Date.now(),
   },

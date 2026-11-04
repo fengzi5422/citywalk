@@ -13,6 +13,12 @@ const KEY = 'citywalk.basemap.v1'
 /** 若 .env.local 里配了 tk，首次打开直接进天地图；界面里的选择仍然优先 */
 const ENV_TK = (import.meta.env.VITE_TIANDITU_TK ?? '').trim()
 
+/**
+ * 天地图审图号。正式发布前必须向天地图申请并在地图页标注真实审图号，
+ * 这里不预置任何编造的编号；未配置时界面会明确提示「以官网公示为准」。
+ */
+export const AUDIT_NO = (import.meta.env.VITE_TIANDITU_AUDIT_NO ?? '').trim()
+
 export const DEFAULT_BASEMAP: BaseMapSetting = ENV_TK
   ? { mode: 'tianditu', tk: ENV_TK }
   : { mode: 'schematic', tk: '' }
