@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PLACES } from './data/places'
 import { generatePlan } from './core/scheduler'
 import { loadBaseMap, saveBaseMap, type BaseMapSetting } from './core/mapConfig'
+import { clearAuth, loadAuth, saveAuth, type Auth } from './core/auth'
+import { api, mergeTrips } from './core/api'
 import type { Prefs, Trip } from './core/types'
 import { StatusBar, TabBar, type TabKey } from './components/Chrome'
 import Explore from './screens/Explore'
@@ -13,6 +15,7 @@ import Today from './screens/Today'
 import TripList from './screens/TripList'
 import Saved from './screens/Saved'
 import Me from './screens/Me'
+import Login from './screens/Login'
 import ShareView from './screens/ShareView'
 
 export type Route =
@@ -25,6 +28,7 @@ export type Route =
   | { name: 'create' }
   | { name: 'trip'; id: string }
   | { name: 'today'; id: string }
+  | { name: 'login' }
 
 const TRIPS_KEY = 'citywalk.trips.v1'
 const SAVED_KEY = 'citywalk.saved.v1'
@@ -48,6 +52,9 @@ export default function App() {
   const [saved, setSaved] = useState<string[]>(() => load<string[]>(SAVED_KEY, []))
   const [basemap, setBasemap] = useState<BaseMapSetting>(() => loadBaseMap())
   const [route, setRoute] = useState<Route>({ name: 'explore' })
+  const [auth, setAuth] = useState<Auth | null>(() => loadAuth())
+  const [syncing, setSyncing] = useState(false)
+  const pushedAt = useRef<Map<string, number>>(new Map())
 
   const updateBasemap = (next: BaseMapSetting) => {
     setBasemap(next)
@@ -70,6 +77,41 @@ export default function App() {
   }, [])
 
   const go = (r: Route) => setRoute(r)
+
+  // 登录后把本地与云端合并，冲突取 updatedAt 较新的那份
+  const handleLogin = async (a: Auth) => {
+    saveAuth(a)
+    setAuth(a)
+    setSyncing(true)
+    const remote = await api.listTrips()
+    setSyncing(false)
+    if (remote) {
+      remote.forEach((r) => pushedAt.current.set(r.id, r.updatedAt))
+      setTrips((local) => mergeTrips(local, remote))
+    }
+    setRoute({ name: 'me' })
+  }
+
+  const handleLogout = () => {
+    clearAuth()
+    setAuth(null)
+    pushedAt.current.clear()
+  }
+
+  // 本地改动延迟推送，避免每敲一下就发一次请求
+  useEffect(() => {
+    if (!auth) return
+    const timer = setTimeout(async () => {
+      setSyncing(true)
+      for (const trip of trips) {
+        if ((pushedAt.current.get(trip.id) ?? 0) >= trip.updatedAt) continue
+        const ok = await api.putTrip(trip)
+        if (ok) pushedAt.current.set(trip.id, trip.updatedAt)
+      }
+      setSyncing(false)
+    }, 900)
+    return () => clearTimeout(timer)
+  }, [trips, auth])
   const activeTab: TabKey = ['explore', 'list', 'saved', 'me'].includes(route.name)
     ? (route.name as TabKey)
     : route.name === 'city' || route.name === 'place' || route.name === 'create'
@@ -219,7 +261,11 @@ export default function App() {
             trips={trips}
             onOpen={(id) => go({ name: 'trip', id })}
             onCreate={() => go({ name: 'create' })}
-            onDelete={(id) => setTrips((ts) => ts.filter((t) => t.id !== id))}
+            onDelete={async (id) => {
+              setTrips((ts) => ts.filter((t) => t.id !== id))
+              pushedAt.current.delete(id)
+              if (auth) await api.deleteTrip(id)
+            }}
           />
         )}
 
@@ -232,9 +278,17 @@ export default function App() {
           />
         )}
 
+        {route.name === 'login' && (
+          <Login onBack={() => go({ name: 'me' })} onDone={handleLogin} />
+        )}
+
         {route.name === 'me' && (
           <Me
             trips={trips}
+            auth={auth}
+            syncing={syncing}
+            onLogin={() => go({ name: 'login' })}
+            onLogout={handleLogout}
             basemap={basemap}
             onBasemapChange={updateBasemap}
             onClear={() => {

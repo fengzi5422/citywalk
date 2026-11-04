@@ -1,16 +1,21 @@
 import { useState } from 'react'
 import type { Trip } from '../core/types'
 import type { BaseMapSetting } from '../core/mapConfig'
-import { Info, Pin } from '../components/Icons'
+import type { Auth } from '../core/auth'
+import { Arrow, Check, Info, Pin } from '../components/Icons'
 
 type Props = {
   trips: Trip[]
   basemap: BaseMapSetting
+  auth: Auth | null
+  syncing: boolean
+  onLogin: () => void
+  onLogout: () => void
   onBasemapChange: (next: BaseMapSetting) => void
   onClear: () => void
 }
 
-export default function Me({ trips, basemap, onBasemapChange, onClear }: Props) {
+export default function Me({ trips, basemap, auth, syncing, onLogin, onLogout, onBasemapChange, onClear }: Props) {
   const [tk, setTk] = useState(basemap.tk)
   const [showTk, setShowTk] = useState(false)
   const [tip, setTip] = useState('')
@@ -36,6 +41,32 @@ export default function Me({ trips, basemap, onBasemapChange, onClear }: Props) 
     <div style={{ paddingBottom: 20 }}>
       <div className="list-head">
         <h2>我的</h2>
+      </div>
+
+      <div className="pad" style={{ marginTop: 12 }}>
+        {auth ? (
+          <div className="authcard">
+            <div className="l">
+              <p className="email">{auth.user.email}</p>
+              <p className="sub">
+                {syncing ? '正在同步…' : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--green)' }}>
+                    <Check size={11} /> 已同步 {trips.length} 份行程
+                  </span>
+                )}
+              </p>
+            </div>
+            <button className="logout" onClick={onLogout}>退出</button>
+          </div>
+        ) : (
+          <button className="authcard as-btn" onClick={onLogin}>
+            <div className="l">
+              <p className="email">登录以同步行程</p>
+              <p className="sub">换设备也能接着用，分享链接更好管理</p>
+            </div>
+            <Arrow size={15} />
+          </button>
+        )}
       </div>
 
       <div className="pad" style={{ marginTop: 14 }}>
@@ -105,18 +136,22 @@ export default function Me({ trips, basemap, onBasemapChange, onClear }: Props) 
         <div className="infobox" style={{ margin: 0 }}>
           <div className="inforow">
             <span className="k">存储位置</span>
-            <span className="v">本机浏览器</span>
+            <span className="v">{auth ? '本机 + 云端' : '本机浏览器'}</span>
           </div>
           <div className="inforow">
             <span className="k">是否上传服务器</span>
-            <span className="v">否</span>
+            <span className="v">{auth ? '已登录，自动同步' : '否'}</span>
           </div>
           <div className="inforow">
             <span className="k">定位权限</span>
             <span className="v">未请求</span>
           </div>
         </div>
-        <p className="hint">换设备或清理浏览器数据会丢失行程。正式版会提供账号同步。</p>
+        <p className="hint">
+          {auth
+            ? '行程在登录后自动同步到云端，本地保留一份副本；换设备登录同一账号即可看到。'
+            : '未登录时数据只在本机；清理浏览器数据会丢失。登录后可跨设备同步。'}
+        </p>
 
         <button
           className="inputrow dashed"

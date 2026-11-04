@@ -1,3 +1,6 @@
+import { loadAuth, type Auth } from './auth'
+import type { Trip } from './types'
+
 /**
  * 后端接口客户端。
  * 默认走同源 /api（开发时由 Vite 代理到 127.0.0.1:5179）；
@@ -5,15 +8,16 @@
  */
 const BASE = (import.meta.env.VITE_API_BASE ?? '').replace(/\/$/, '')
 
-async function req<T>(path: string, init?: RequestInit): Promise<T | null> {
+async function req<T>(path: string, init?: RequestInit & { anonymous?: boolean }): Promise<T | null> {
   try {
-    const res = await fetch(BASE + path, {
-      ...init,
-      headers: {
-        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-        ...(init?.headers || {}),
-      },
-    })
+    const headers: Record<string, string> = { ...(init?.headers as Record<string, string>) }
+    if (init?.body) headers['Content-Type'] = 'application/json'
+    if (!init?.anonymous) {
+      const a = loadAuth()
+      if (a) headers.Authorization = `Bearer ${a.token}`
+    }
+
+    const res = await fetch(BASE + path, { ...init, headers })
     const json = (await res.json().catch(() => null)) as { ok?: boolean; data?: T } | null
     if (!res.ok || !json?.ok) return null
     return (json.data ?? null) as T | null
@@ -31,8 +35,44 @@ export interface RemoteShare {
   bound: boolean
 }
 
+export interface RemoteTrip {
+  id: string
+  title: string
+  city: string
+  trip: Trip
+  createdAt: number
+  updatedAt: number
+}
+
 export const api = {
-  health: () => req<{ service: string; version: string }>('/api/health'),
+  health: () => req<{ service: string; version: string }>('/api/health', { anonymous: true }),
+
+  register: (email: string, password: string) =>
+    req<Auth>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+      anonymous: true,
+    }),
+
+  login: (email: string, password: string) =>
+    req<Auth>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+      anonymous: true,
+    }),
+
+  me: () => req<{ id: string; email: string }>('/api/me'),
+
+  listTrips: () => req<RemoteTrip[]>('/api/trips'),
+
+  putTrip: (trip: Trip) =>
+    req<{ id: string; updatedAt: number }>(`/api/trips/${encodeURIComponent(trip.id)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title: trip.title, city: trip.city, trip }),
+    }),
+
+  deleteTrip: (id: string) =>
+    req<{ deleted: number }>(`/api/trips/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
   createShare: (tripId: string, payload: unknown) =>
     req<RemoteShare>('/api/shares', { method: 'POST', body: JSON.stringify({ tripId, payload }) }),
@@ -40,6 +80,7 @@ export const api = {
   getShare: (token: string) =>
     req<{ payload: Record<string, unknown>; createdAt: number; expiresAt: number; views: number }>(
       `/api/shares/${encodeURIComponent(token)}`,
+      { anonymous: true },
     ),
 
   revokeShare: (token: string, ownerKey: string) =>
@@ -55,7 +96,6 @@ export async function backendAvailable() {
   return Boolean(h?.service)
 }
 
-
 /** 分享读取需要区分"已撤销/过期"和"网络不可达"，所以单独返回状态码 */
 export async function fetchShare(token: string): Promise<{ data: Record<string, unknown> | null; status: number }> {
   try {
@@ -65,4 +105,15 @@ export async function fetchShare(token: string): Promise<{ data: Record<string, 
   } catch {
     return { data: null, status: 0 }
   }
+}
+
+/** 本地与云端合并：同 id 取 updatedAt 较新的那份 */
+export function mergeTrips(local: Trip[], remote: RemoteTrip[]): Trip[] {
+  const map = new Map<string, Trip>(local.map((t) => [t.id, t]))
+  for (const r of remote) {
+    if (!r?.trip?.id) continue
+    const mine = map.get(r.id)
+    if (!mine || r.updatedAt > mine.updatedAt) map.set(r.id, r.trip)
+  }
+  return [...map.values()].sort((a, b) => b.updatedAt - a.updatedAt)
 }
