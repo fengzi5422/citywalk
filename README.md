@@ -23,10 +23,11 @@ ly/
 ├── scripts/             部署 / 备份 / 恢复
 ├── .env.example         部署环境变量模板
 ├── docker-compose.yml
+├── DEPLOY.md            服务器 clone 即部署手册
 └── README.md
 ```
 
-相关文档：`output/20261103-travelapp/stage3/城市自由行App产品需求与规划设计.docx`（需求与规划）、`design/城市自由行-App设计稿-v1.html`（高保真设计稿）、`app/docs/RESOURCES.md`（正式资源清单与替代方案）。
+相关文档：`DEPLOY.md`（从 GitHub clone 到服务器直接部署）、`output/20261103-travelapp/stage3/城市自由行App产品需求与规划设计.docx`（需求与规划）、`design/城市自由行-App设计稿-v1.html`（高保真设计稿）、`app/docs/RESOURCES.md`（正式资源清单与替代方案）。
 
 ## 本地开发
 
@@ -106,13 +107,15 @@ cp app/.env.example app/.env.local
 
 ## 部署到云服务器
 
+**完整步骤见 [DEPLOY.md](DEPLOY.md)**：从 GitHub clone 到服务器直接跑起来，目标服务器 `zz@123.57.92.56`。仓库已包含完整后端 `server/`、Compose 编排、两个 Dockerfile、nginx 配置与运维脚本，服务器上无需本地打包或单独上传后端代码；本地只负责把代码推到 GitHub。
+
 ### 方式一：Docker Compose（推荐）
 
 ```bash
-git clone <repo> && cd ly
+git clone https://github.com/fengzi5422/citywalk.git && cd citywalk
 cp .env.example .env
 openssl rand -hex 32          # 填入 .env 的 JWT_SECRET
-./scripts/deploy.sh           # 构建、启动、健康检查一条龙
+bash scripts/deploy.sh        # 构建、启动、健康检查一条龙
 ```
 
 等价于 `docker compose up -d --build`。部署后：
