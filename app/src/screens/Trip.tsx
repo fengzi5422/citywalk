@@ -21,10 +21,11 @@ type Props = {
   onBack: () => void
   onUpdate: (fn: (t: Trip) => Trip) => void
   onStart: () => void
+  onClone: () => void
   onPlace: (id: string) => void
 }
 
-export default function TripScreen({ trip, basemap, onBasemapChange, onBack, onUpdate, onStart, onPlace }: Props) {
+export default function TripScreen({ trip, basemap, onBasemapChange, onBack, onUpdate, onStart, onClone, onPlace }: Props) {
   const [dayIdx, setDayIdx] = useState(0)
   const [view, setView] = useState<'timeline' | 'map'>('timeline')
   const [sheet, setSheet] = useState<PlanItem | null>(null)
@@ -311,6 +312,15 @@ export default function TripScreen({ trip, basemap, onBasemapChange, onBack, onU
           ))}
           <li>节奏：{PACE_CONF[trip.prefs.pace].label}，每天约 {PACE_CONF[trip.prefs.pace].maxActivities} 个主要活动。</li>
         </ul>
+
+        <div className="pad" style={{ marginTop: 4 }}>
+          <button className="btn-ghost" style={{ height: 42 }} onClick={onClone}>
+            复制为新行程
+          </button>
+          <p className="hint" style={{ marginTop: 8 }}>
+            副本从明天开始重新编号，地点与时间保持不变；出发前仍需核对开放信息。
+          </p>
+        </div>
 
         <div style={{ height: 10 }} />
       </div>

@@ -1,11 +1,12 @@
 import { CITY, DISTRICTS, PLACES } from '../data/places'
 import { Back, Building, Bowl, Cup, Ticket } from '../components/Icons'
 import { Skyline, gradOf } from '../components/Art'
+import { TEMPLATES } from '../data/templates'
 
 type Props = {
   onBack: () => void
   onPlace: (id: string) => void
-  onCreate: () => void
+  onCreate: (templateId?: string) => void
 }
 
 const CATS = [
@@ -67,13 +68,20 @@ export default function CityScreen({ onBack, onPlace, onCreate }: Props) {
           <h2>路线模板</h2>
           <span>全部</span>
         </div>
-        <button className="route" style={{ width: '100%' }} onClick={onCreate}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <b style={{ margin: 0 }}>老城两日 · 经典</b>
-            <span style={{ fontSize: 11, color: 'var(--green)' }}>套用</span>
-          </div>
-          <span style={{ marginTop: 4, display: 'block' }}>D1 4 站 · D2 3 站 · 步行 7.4km · 含 2 处茶馆</span>
-        </button>
+        {TEMPLATES.map((t) => (
+          <button
+            key={t.id}
+            className="route"
+            style={{ width: '100%', marginBottom: 8 }}
+            onClick={() => onCreate(t.id)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <b style={{ margin: 0 }}>{t.name}</b>
+              <span style={{ fontSize: 11, color: 'var(--green)' }}>套用</span>
+            </div>
+            <span style={{ marginTop: 4, display: 'block' }}>{t.summary}</span>
+          </button>
+        ))}
       </div>
 
       <div className="pad" style={{ marginTop: 20 }}>

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { INTEREST_TAGS, PLACES } from '../data/places'
+import { findTemplate } from '../data/templates'
 import type { Pace, Prefs } from '../core/types'
 import { PACE_CONF, paceHint } from '../core/scheduler'
 import { Back, Check, Clock } from '../components/Icons'
 
 type Props = {
+  templateId?: string | null
   onBack: () => void
-  onDone: (prefs: Prefs, start: Date) => void
+  onDone: (prefs: Prefs, start: Date, templateId?: string | null) => void
 }
 
 const START = new Date(Date.now() + 86400000)
@@ -19,18 +21,19 @@ const PACES: Pace[] = ['easy', 'normal', 'packed']
 const ARRIVALS = [9 * 60, 11 * 60, 14 * 60]
 const DEPARTURES = [15 * 60, 17 * 60, 19 * 60]
 
-export default function Create({ onBack, onDone }: Props) {
+export default function Create({ templateId, onBack, onDone }: Props) {
+  const tpl = findTemplate(templateId)
   const [step, setStep] = useState(0)
   const [generating, setGenerating] = useState(false)
   const [prefs, setPrefs] = useState<Prefs>({
     city: '成都',
-    days: 2,
-    pace: 'easy',
+    days: tpl?.days ?? 2,
+    pace: tpl?.pace ?? 'easy',
     arrivalTime: 11 * 60,
     arrivalPlace: '成都东站',
     departureTime: 17 * 60,
     departurePlace: '成都东站',
-    interests: ['历史', '美食'],
+    interests: tpl?.interests ?? ['历史', '美食'],
     budget: [300, 600],
     mustGo: ['p-museum'],
     bookings: [{ placeId: 'p-museum', dayIndex: 1, time: 10 * 60 }],
@@ -49,7 +52,7 @@ export default function Create({ onBack, onDone }: Props) {
 
   useEffect(() => {
     if (!generating) return
-    const t = setTimeout(() => onDone(prefs, START), 1700)
+    const t = setTimeout(() => onDone(prefs, START, templateId ?? null), 1700)
     return () => clearTimeout(t)
   }, [generating])
 
@@ -75,7 +78,9 @@ export default function Create({ onBack, onDone }: Props) {
           {step === 0 && (
             <>
               <h1 className="h-l" style={{ marginTop: 20 }}>先说说这趟旅行</h1>
-              <p className="sub" style={{ marginTop: 6 }}>只填必填项也能出稿，其余可以之后补。</p>
+              <p className="sub" style={{ marginTop: 6 }}>
+                {tpl ? `套用「${tpl.name}」，下面已按模板填好，可以改。` : '只填必填项也能出稿，其余可以之后补。'}
+              </p>
 
               <div className="field">
                 <p className="lb">目的地</p>

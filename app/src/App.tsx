@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { PLACES } from './data/places'
 import { generatePlan } from './core/scheduler'
+import { recomputeDay } from './core/day'
+import { dateLabel } from './core/time'
+import { findTemplate } from './data/templates'
 import { loadBaseMap, saveBaseMap, type BaseMapSetting } from './core/mapConfig'
 import { clearAuth, loadAuth, saveAuth, type Auth } from './core/auth'
 import { api, mergeTrips } from './core/api'
@@ -25,7 +28,7 @@ export type Route =
   | { name: 'me' }
   | { name: 'city' }
   | { name: 'place'; id: string }
-  | { name: 'create' }
+  | { name: 'create'; templateId?: string }
   | { name: 'trip'; id: string }
   | { name: 'today'; id: string }
   | { name: 'login' }
@@ -125,8 +128,9 @@ export default function App() {
       ? trips.find((t) => t.id === route.id)
       : undefined
 
-  const createTrip = (prefs: Prefs, start: Date) => {
-    const plan = generatePlan(prefs, PLACES, start)
+  const createTrip = (prefs: Prefs, start: Date, templateId?: string | null) => {
+    const tpl = findTemplate(templateId)
+    const plan = generatePlan(prefs, PLACES, start, tpl?.placeIds ?? [])
     const trip: Trip = {
       id: `t${Date.now()}`,
       city: prefs.city,
@@ -147,33 +151,61 @@ export default function App() {
     setTrips((ts) => ts.map((t) => (t.id === id ? { ...fn(t), updatedAt: Date.now() } : t)))
   }
 
+  const cloneTrip = (id: string) => {
+    const src = trips.find((t) => t.id === id)
+    if (!src) return
+    const stamp = Date.now()
+    const start = new Date(stamp + 86400000)
+    const days = src.plan.days.map((d, i) => ({
+      ...d,
+      index: i,
+      date: dateLabel(start, i),
+      items: d.items.map((it, k) => ({ ...it, id: `${it.id}-c${stamp}-${k}` })),
+    }))
+    const copy: Trip = {
+      ...src,
+      id: `t${stamp}`,
+      title: `${src.city} · ${src.plan.days.length} 天（副本）`,
+      createdAt: stamp,
+      updatedAt: stamp,
+      status: 'ready',
+      done: [],
+      skipped: [],
+      plan: { ...src.plan, days },
+    }
+    setTrips((ts) => [copy, ...ts])
+    setRoute({ name: 'trip', id: copy.id })
+  }
+
   const toggleSave = (id: string) =>
     setSaved((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
 
-  const addToTrip = (tripId: string, placeId: string) => {
-    const place = PLACES.find((p) => p.id === placeId)
-    if (!place) return
+  const addManyToTrip = (tripId: string, placeIds: string[]) => {
+    const picked = placeIds
+      .map((id) => PLACES.find((p) => p.id === id))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p))
+    if (picked.length === 0) return
+
     updateTrip(tripId, (t) => {
-      const days = t.plan.days.map((d, i) =>
-        i === 0
-          ? {
-              ...d,
-              items: [
-                ...d.items,
-                {
-                  id: `item-add-${placeId}-${Date.now()}`,
-                  kind: place.category === 'food' ? ('meal' as const) : ('place' as const),
-                  placeId: place.id,
-                  name: place.name,
-                  start: 16 * 60,
-                  duration: place.duration,
-                  note: place.reason,
-                },
-              ],
-            }
-          : d,
-      )
-      return { ...t, plan: { ...t.plan, days } }
+      const day = t.plan.days[0]
+      const at = day.items.findIndex((i) => i.kind === 'departure')
+      const added = picked.map((place, idx) => ({
+        id: `item-add-${place.id}-${Date.now()}-${idx}`,
+        kind: place.category === 'food' ? ('meal' as const) : ('place' as const),
+        placeId: place.id,
+        name: place.name,
+        start: 16 * 60,
+        duration: place.duration,
+        note: place.reason,
+      }))
+      const items = at >= 0
+        ? [...day.items.slice(0, at), ...added, ...day.items.slice(at)]
+        : [...day.items, ...added]
+      const next = recomputeDay({ ...day, items }, t.prefs, PLACES)
+      return {
+        ...t,
+        plan: { ...t.plan, days: t.plan.days.map((d, i) => (i === 0 ? next : d)) },
+      }
     })
   }
 
@@ -204,7 +236,7 @@ export default function App() {
             trips={trips}
             onCity={() => go({ name: 'city' })}
             onPlace={(id) => go({ name: 'place', id })}
-            onCreate={() => go({ name: 'create' })}
+            onCreate={(tid) => go({ name: 'create', templateId: tid })}
             onOpenTrip={(id) => go({ name: 'trip', id })}
           />
         )}
@@ -213,7 +245,7 @@ export default function App() {
           <CityScreen
             onBack={() => go({ name: 'explore' })}
             onPlace={(id) => go({ name: 'place', id })}
-            onCreate={() => go({ name: 'create' })}
+            onCreate={(tid) => go({ name: 'create', templateId: tid })}
           />
         )}
 
@@ -224,13 +256,17 @@ export default function App() {
             trips={trips}
             onToggleSave={() => toggleSave(route.id)}
             onBack={() => go({ name: 'explore' })}
-            onAdd={addToTrip}
+            onAdd={(tripId, placeId) => addManyToTrip(tripId, [placeId])}
             onOpenTrip={(id) => go({ name: 'trip', id })}
           />
         )}
 
         {route.name === 'create' && (
-          <Create onBack={() => go({ name: 'explore' })} onDone={createTrip} />
+          <Create
+            templateId={route.templateId}
+            onBack={() => go({ name: 'explore' })}
+            onDone={createTrip}
+          />
         )}
 
         {route.name === 'trip' && currentTrip && (
@@ -240,6 +276,7 @@ export default function App() {
             onBasemapChange={updateBasemap}
             onBack={() => go({ name: 'list' })}
             onUpdate={(fn) => updateTrip(currentTrip.id, fn)}
+            onClone={() => cloneTrip(currentTrip.id)}
             onStart={() => {
               updateTrip(currentTrip.id, (t) => ({ ...t, status: 'active' }))
               go({ name: 'today', id: currentTrip.id })
@@ -272,9 +309,12 @@ export default function App() {
         {route.name === 'saved' && (
           <Saved
             ids={saved}
+            trips={trips}
             onPlace={(id) => go({ name: 'place', id })}
             onRemove={(id) => toggleSave(id)}
             onCreate={() => go({ name: 'create' })}
+            onAddMany={addManyToTrip}
+            onOpenTrip={(id) => go({ name: 'trip', id })}
           />
         )}
 

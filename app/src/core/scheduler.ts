@@ -76,7 +76,7 @@ function timeFit(p: Place, minute: number) {
   return 0.6
 }
 
-function score(p: Place, prefs: Prefs, minute: number, from: Place | null) {
+function score(p: Place, prefs: Prefs, minute: number, from: Place | null, preferred?: Set<string>) {
   const hits = p.tags.filter((t) => prefs.interests.includes(t)).length
   let s = Math.min(1, hits / 2) * 0.35
   s += ((p.rating - 4) / 0.8) * 0.15
@@ -84,6 +84,8 @@ function score(p: Place, prefs: Prefs, minute: number, from: Place | null) {
   s += p.ticket <= prefs.budget[1] * 0.25 ? 0.1 : 0.02
   s += p.indoor ? 0.03 : 0
   if (prefs.mustGo.includes(p.id)) s += 0.25
+  // 套用路线模板时，模板里的地点优先
+  if (preferred?.has(p.id)) s += 0.45
   if (from) {
     const d = distance(from, p)
     s += d < 1200 ? 0.12 : d < 3000 ? 0.06 : 0
@@ -97,7 +99,7 @@ function isOpenOn(p: Place, weekday: number) {
 }
 
 /** 片区按"平均分 × 规模系数"排序，避免一个片区因为地点多就垄断所有天数 */
-function rankDistricts(prefs: Prefs, places: Place[]) {
+function rankDistricts(prefs: Prefs, places: Place[], preferred?: Set<string>) {
   const groups = new Map<string, Place[]>()
   for (const p of places) {
     if (!groups.has(p.district)) groups.set(p.district, [])
@@ -105,7 +107,7 @@ function rankDistricts(prefs: Prefs, places: Place[]) {
   }
   return [...groups.entries()]
     .map(([name, list]) => {
-      const avg = list.reduce((s, p) => s + score(p, prefs, 720, null), 0) / list.length
+      const avg = list.reduce((s, p) => s + score(p, prefs, 720, null, preferred), 0) / list.length
       return { name, list, rank: avg * Math.log2(1 + list.length) }
     })
     .sort((a, b) => b.rank - a.rank)
@@ -120,11 +122,17 @@ function dayWindow(dayIdx: number, prefs: Prefs) {
   return { start, end }
 }
 
-export function generatePlan(prefs: Prefs, allPlaces: Place[], baseDate = new Date()): PlanResult {
+export function generatePlan(
+  prefs: Prefs,
+  allPlaces: Place[],
+  baseDate = new Date(),
+  preferredIds: string[] = [],
+): PlanResult {
   const cfg = PACE_CONF[prefs.pace]
   const weekdayOf = (i: number) => new Date(baseDate.getTime() + i * 86400000).getDay()
+  const preferred = new Set(preferredIds)
 
-  const districts = rankDistricts(prefs, allPlaces)
+  const districts = rankDistricts(prefs, allPlaces, preferred)
 
   // 有预约的那一天，片区以预约地点为准；其余天按排名依次分配，避免重复
   const fixedDays = new Map<number, string>()
@@ -215,7 +223,7 @@ export function generatePlan(prefs: Prefs, allPlaces: Place[], baseDate = new Da
         if (used.has(p.id)) continue
         if (p.category === 'food' && meals >= 2) continue
         if (p.category !== 'food' && activities >= cfg.maxActivities) continue
-        const s = score(p, prefs, minute, last)
+        const s = score(p, prefs, minute, last, preferred)
         if (s > bestScore) { best = p; bestScore = s }
       }
       return best

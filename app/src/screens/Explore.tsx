@@ -2,20 +2,16 @@ import { CITY, DISTRICTS, PLACES } from '../data/places'
 import type { Trip } from '../core/types'
 import { Arrow, Chevron, Pin, Search } from '../components/Icons'
 import { Skyline, Waves, gradOf } from '../components/Art'
+import { TEMPLATES } from '../data/templates'
 import { short } from '../core/time'
 
 type Props = {
   trips: Trip[]
   onCity: () => void
   onPlace: (id: string) => void
-  onCreate: () => void
+  onCreate: (templateId?: string) => void
   onOpenTrip: (id: string) => void
 }
-
-const ROUTES = [
-  { name: '老城一日', meta: '6 站 · 步行 4.2km', grad: 'linear-gradient(140deg,#2C6E60,#7FAE94)', wave: false },
-  { name: '吃货半日', meta: '4 站 · 3 顿小吃', grad: 'linear-gradient(140deg,#B4703F,#D9A87C)', wave: true },
-]
 
 export default function Explore({ trips, onCity, onPlace, onCreate, onOpenTrip }: Props) {
   const active = trips.find((t) => t.status === 'active') ?? trips.find((t) => t.status === 'ready')
@@ -53,7 +49,7 @@ export default function Explore({ trips, onCity, onPlace, onCreate, onOpenTrip }
               <span>美食</span>
               <span>夜游</span>
             </div>
-            <button className="hero-btn" onClick={onCreate}>
+            <button className="hero-btn" onClick={() => onCreate()}>
               为我安排两天 <Arrow />
             </button>
           </div>
@@ -84,13 +80,13 @@ export default function Explore({ trips, onCity, onPlace, onCreate, onOpenTrip }
         </div>
       </div>
       <div className="hscroll">
-        {ROUTES.map((r) => (
-          <button key={r.name} className="route" onClick={onCreate}>
+        {TEMPLATES.map((r) => (
+          <button key={r.id} className="route" onClick={() => onCreate(r.id)}>
             <div className="thumb" style={{ background: r.grad }}>
-              {r.wave ? <Waves /> : <Skyline opacity={0.2} />}
+              {r.id === 'tpl-food' ? <Waves /> : <Skyline opacity={0.2} />}
             </div>
             <b>{r.name}</b>
-            <span>{r.meta}</span>
+            <span>{r.summary}</span>
           </button>
         ))}
       </div>
