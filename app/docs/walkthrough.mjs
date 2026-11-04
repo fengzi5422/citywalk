@@ -56,6 +56,7 @@ await shot('06-trip')
 
 // 切到地图
 await clickText('地图')
+await sleep(1600) // 等天地图瓦片加载完，避免截到淡入中的半透明注记
 await shot('07-map')
 
 // 点击地图上的第二个点位，验证选中联动

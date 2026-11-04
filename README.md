@@ -34,11 +34,45 @@ npm run dev            # http://127.0.0.1:5178
 验证：
 
 ```bash
-node server/scripts/smoke.mjs        # 后端接口，22 项
-node app/docs/walkthrough.mjs        # 前端主流程截图
-node app/docs/share-remote-test.mjs  # 跨设备分享
-node app/docs/auth-test.mjs         # 注册登录与云同步
+node server/scripts/smoke.mjs             # 后端接口，22 项
+node app/docs/walkthrough.mjs             # 前端主流程截图
+node app/docs/basemap-test.mjs            # 底图切换
+node app/docs/edit-test.mjs               # 行程编辑
+node app/docs/share-test.mjs              # 本地分享
+node app/docs/share-remote-test.mjs       # 跨设备分享
+node app/docs/auth-test.mjs               # 注册登录与云同步
+node app/docs/feature-test.mjs            # 模板套用 / 行程复制 / 收藏批量加入
+node app/docs/verify-tianditu-env.mjs     # 天地图默认底图（需先配 .env.local）
 ```
+
+### 地图底图配置
+
+地图用 MapLibre GL JS 渲染，底图可在「我的 → 底图」里切换：
+
+| 模式 | 说明 |
+| --- | --- |
+| 示意图 | 自有 GeoJSON（片区、环线、道路、水系），无需 key，永远可用 |
+| 天地图 | WMTS 真实街道底图（`vec_w` 底图 + `cva_w` 注记），需要浏览器端 key |
+
+配置天地图：
+
+```bash
+cp app/.env.example app/.env.local
+# 编辑 app/.env.local，填入 VITE_TIANDITU_TK=<浏览器端 tk>
+```
+
+- key 必须是**浏览器端**类型，并在天地图控制台把 `127.0.0.1` 与 `localhost` 都加入 Referer 白名单（两者是不同来源）；上线后还要加正式域名。
+- 改完 `.env.local` 重启 `npm run dev`（Vite 通常会自动重启）。配了 key 时应用默认进入天地图模式，未配置则默认示意图。
+- `.env.local` 已被 `.gitignore` 排除，key 不会进版本库。
+
+验证 key：
+
+```bash
+node app/docs/verify-tianditu.mjs <tk>   # 单独验证 key / 白名单：z=10—14 瓦片 + 真实底图截图
+node app/docs/verify-tianditu-env.mjs    # 不注入任何配置，验证默认启动就能出真实底图
+```
+
+若 key 被禁用或配额用尽，瓦片返回 403，页面会显示提示条并可一键「切回示意图」，其余功能不受影响。
 
 ## 部署到云服务器
 
@@ -89,6 +123,7 @@ cd app && npm ci && npm run build   # 产物在 app/dist
 | 行程编辑 | 已完成（换 / 跳 / 上移下移 / 换日 / 锁定 / 撤销） |
 | 今天页 | 已完成 |
 | 收藏 / 行程列表 | 已完成 |
+| 地图底图 | 已完成（示意图 / 天地图双底图，可切换、失败自动降级） |
 | 分享 | 已完成（服务端短链，可跨设备，可撤销） |
 | 账号与多端同步 | 已完成（邮箱注册登录，本地优先 + 云端合并，冲突取较新） |
 | 内容后台 | 未开始 |
@@ -100,6 +135,8 @@ cd app && npm ci && npm run build   # 产物在 app/dist
 - 同步是"最后写入者胜"，没有逐字段合并；两台设备同时改同一份行程时，较旧的那份会被覆盖
 - 前端未做邮箱验证与找回密码
 - `node:sqlite` 是 Node 22 实验特性
+- POI、营业时间、票价均为成都示例数据，未接入真实内容源
+- 地图页审图号尚未正式标注，目前只有「底图 © 天地图」说明
 
 ## 版本
 
