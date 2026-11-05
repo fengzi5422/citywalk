@@ -102,12 +102,63 @@ docker compose logs --tail=50 api         # 后端日志
 
 网页端：打开首页 → 「我的 → 条款与说明」确认合规文本；地图页未配 key 时自动使用离线示意图，功能不受影响。
 
-## 升级
+## 升级（已有 clone，不需要重新 clone）
+
+之前已经 `git clone` 过的机器，直接拉最新代码即可。**不用重新 clone、不用迁移数据库、不用重填 `JWT_SECRET`**：
 
 ```bash
 cd citywalk
+git pull                     # 输出 Already up to date. 说明已是最新
+bash scripts/deploy.sh       # 重新构建镜像并启动
+```
+
+想先确认是否需要更新：
+
+```bash
+git fetch origin
+git log --oneline -1         # 本地版本
+git ls-remote origin main    # 远端版本（当前为 cc77fcc）
+```
+
+`deploy.sh` 内部会执行 `docker compose build`，所以 `.env` 里 `VITE_*` 这类**构建期变量**的改动会自动生效，后端代码改动（如 CORS 通配）也会重新打进 api 镜像。
+
+`git pull` 不会动下面这些（都在 `.gitignore` 里）：
+
+| 路径 | 说明 |
+| --- | --- |
+| `.env` | 密钥与配置保留原值，新模板的注释不会自动合并进来 |
+| `data/citywalk.db` | 数据库（Compose 挂载 `./data`），账号 / 行程 / 历史都不丢 |
+| `backups/` | 备份文件 |
+| `app/shots/`、日志 | 本地产物 |
+
+建议升级前顺手跑一次 `bash scripts/backup.sh`，虽然正常升级不会碰数据库。
+
+### 本地改过仓库文件导致 pull 冲突
+
+若按「只部署后端」在服务器上改过 `docker-compose.yml` 端口，或改过 `app/nginx.conf`，`git pull` 会提示本地修改将被覆盖。**别用 `git reset --hard`**（会丢改动）：
+
+```bash
+git stash
 git pull
-bash scripts/deploy.sh       # 重新构建镜像并启动，./data 数据卷不丢
+git stash pop                # 把改动应用回来，有冲突就手工合并
+bash scripts/deploy.sh
+```
+
+更省心的做法是把自定义配置写进 `docker-compose.override.yml`（Compose 自动加载、不会被仓库覆盖），以后升级零冲突。
+
+### 升级后要单独处理的东西
+
+- **APK 不在仓库里**（`*.apk` 被忽略）。`git pull` 拿不到新包，要把新版 APK 单独传到手机安装；旧 APK 没有明文放行配置，连不上 `http://IP:8080`。
+- **`.env` 不会自动套用新注释**。若之前填的是域名版配置，按上面「只有公网 IP、没有域名」章节改成 IP 版（`VITE_API_BASE`、`CORS_ORIGINS`），再跑一次 `deploy.sh` 重新构建。
+- **换了 `VITE_API_BASE` 的 IP 必须重打 APK**（构建期常量写死在包里）。
+
+### 验证升级结果
+
+```bash
+curl http://127.0.0.1:8080/api/health     # version 应为 0.9.0
+docker compose ps                          # api / web 均 Up
+curl -s -i -H "Origin: https://any.example.com" \
+  http://127.0.0.1:8080/api/health | grep -i access-control
 ```
 
 ## 备份与恢复
@@ -186,6 +237,8 @@ Android targetSdk 28+ 默认禁明文 HTTP，且 `https://localhost` 页面请�
 ### 4. 只部署后端、不跑前端容器
 
 若服务器上只想要后端 API，在**服务器本地**把 `docker-compose.yml` 中 `api` 的 `"127.0.0.1:5179:5179"` 改成 `"5179:5179"`，并在安全组放行 5179；前端统一填 `VITE_API_BASE=http://123.57.92.56:5179`、`CORS_ORIGINS=*`。这会把后端直接暴露到公网、少了 nginx 这层，仅建议临时联调使用。
+
+> 直接改仓库文件会让后续 `git pull` 冲突（处理方式见「升级」章节）。更推荐新建 `docker-compose.override.yml` 只覆盖 `api` 的 ports，Compose 会自动加载且不会被仓库更新覆盖。
 
 ### 5. 风险与升级路径
 
