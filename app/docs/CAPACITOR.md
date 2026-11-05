@@ -31,6 +31,7 @@ npx cap sync android
 - 不设置 `VITE_API_BASE` 时，App 仍可离线使用（行程、收藏、历史都存在本机），但登录 / 云同步 / 分享短链不可用。
 - 正式后端建议 HTTPS；服务器部署见根目录 `DEPLOY.md`。若后端与网页同源，原生 App 仍要填绝对地址（因为 WebView 不共享该域名）。
 - 后端 `CORS_ORIGINS` 必须允许 `https://localhost`（Android）与 `capacitor://localhost`（iOS）。
+- **仅公网 IP / HTTP 部署**：仓库已为这种场景在 `capacitor.config.json` 设 `android.allowMixedContent: true`，并在 `AndroidManifest.xml` 的 `<application>` 设 `android:usesCleartextTraffic="true"`。前者允许 `https://localhost` 页面请求 `http://` 接口（否则 WebView 按 mixed content 拦截），后者允许 Android 发起明文 HTTP（否则 targetSdk 28+ 直接拒绝）。**配好 HTTPS、把 `VITE_API_BASE` 换成 https 后，建议把这两项移除**，避免长期降低安全性；iOS 如需 HTTP 还要另配 ATS。
 
 ## 环境要求
 

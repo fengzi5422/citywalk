@@ -16,8 +16,10 @@ const app = Fastify({
 
 await app.register(cors, {
   origin: (origin, cb) => {
-    // 允许同源、白名单来源；本地开发时也放行无 Origin 的请求
-    if (!origin || config.corsOrigins.includes(origin)) return cb(null, true)
+    // 允许同源、白名单来源，以及无 Origin 的请求（本地开发 / 原生客户端）。
+    // CORS_ORIGINS=* 用于前端来源无法枚举的公开部署（仅 IP 或多人各自托管网页端）；
+    // 本项目用 Authorization 头而非 cookie，通配不会泄露凭证。
+    if (!origin || config.corsOrigins.includes('*') || config.corsOrigins.includes(origin)) return cb(null, true)
     cb(new Error('来源不在白名单'), false)
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

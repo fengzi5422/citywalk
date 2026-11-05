@@ -134,6 +134,75 @@ NODE_ENV=production JWT_SECRET=<32+字符> HOST=0.0.0.0 PORT=5179 \
 
 需要 Node 22.5+（`node:sqlite`），并自行用 systemd / pm2 托管、按需配置 `CORS_ORIGINS`。此模式下前端需通过 `VITE_API_BASE=https://api.example.com npm run build` 指向后端地址。
 
+## 只有公网 IP、没有域名（阿里云 ECS）
+
+适用：只有一个公网 IP（如 `123.57.92.56`），**没有域名**，要让任意浏览器和任意 App 从公网访问。统一用 `http://IP:8080` 作为唯一入口。
+
+### 1. 放行端口（必做，最常漏）
+
+- **阿里云控制台 → 安全组 → 入方向**：放行 TCP `8080`，来源 `0.0.0.0/0`（别只放行自己 IP）。
+- **服务器系统防火墙**：
+  ```bash
+  # Ubuntu/Debian
+  ufw allow 8080/tcp && ufw reload
+  # CentOS / Alibaba Cloud Linux
+  firewall-cmd --add-port=8080/tcp --permanent && firewall-cmd --reload
+  ```
+- Compose 里 `web` 已是 `"8080:80"`（监听所有网卡）；`api` 只绑 `127.0.0.1:5179`，不直接暴露，保持不动。
+
+从**另一台机器或手机流量**验证，不要只在服务器上测：
+
+```bash
+curl http://123.57.92.56:8080/api/health
+# 浏览器打开 http://123.57.92.56:8080
+```
+
+### 2. `.env`（IP 版，可直接抄）
+
+```bash
+JWT_SECRET=<openssl rand -hex 32 的输出>
+CORS_ORIGINS=http://123.57.92.56:8080,https://localhost,http://localhost,capacitor://localhost
+VITE_API_BASE=http://123.57.92.56:8080
+VITE_TIANDITU_TK=
+VITE_TIANDITU_AUDIT_NO=
+SHARE_TTL_DAYS=7
+```
+
+`VITE_API_BASE` 填**网页自己的地址**：从 `http://123.57.92.56:8080` 打开的网页请求同地址 `/api` 仍算同源、不触发 CORS；App WebView 跨域直连，白名单里三个 App origin 已列出。一份 `dist` / 一个 APK 两端通用。
+
+> 若网页端不在同一地址（前端放 CDN、或多人各自托管网页），来源无法枚举，把 `CORS_ORIGINS` 改成 `*`。本项目用 `Authorization` 头而非 cookie，通配不会泄露凭证，但接口会向任意站点开放。
+
+### 3. App 端的两个明文开关（仓库已配好）
+
+Android targetSdk 28+ 默认禁明文 HTTP，且 `https://localhost` 页面请求 `http://` 会被 mixed content 拦截。仓库已为此打开：
+
+| 位置 | 配置 | 作用 |
+| --- | --- | --- |
+| `app/capacitor.config.json` | `android.allowMixedContent: true` | WebView 允许混合内容 |
+| `app/android/app/src/main/AndroidManifest.xml` | `android:usesCleartextTraffic="true"` | 允许明文 HTTP |
+
+改完必须 `npx cap sync android` 并**重打 APK**（配置写进包里，旧 APK 不会自动生效）。iOS 走 HTTP 还需另配 ATS，当前仓库未生成 iOS 工程。
+
+### 4. 只部署后端、不跑前端容器
+
+若服务器上只想要后端 API，在**服务器本地**把 `docker-compose.yml` 中 `api` 的 `"127.0.0.1:5179:5179"` 改成 `"5179:5179"`，并在安全组放行 5179；前端统一填 `VITE_API_BASE=http://123.57.92.56:5179`、`CORS_ORIGINS=*`。这会把后端直接暴露到公网、少了 nginx 这层，仅建议临时联调使用。
+
+### 5. 风险与升级路径
+
+- **明文 HTTP 的风险**：JWT 与行程内容不加密，公共 Wi-Fi 下可被嗅探，也没有服务端身份校验。适合原型、内测、可信网络；**正式公开服务强烈建议 HTTPS**。
+- 大陆地域阿里云 ECS 用未备案域名访问 80/443 会被拦截，但 `IP:8080` 这类非标准端口通常不受影响；Let's Encrypt 的 HTTP-01 挑战需要 80 端口公网可达，在未备案大陆机器上可能签发失败。
+- 无域名也能拿 HTTPS：① 申请一个便宜域名解析到该 IP，用 Caddy 自动签证书（推荐）；② 用 `sslip.io` / `nip.io` 泛解析域名（如 `123-57-92-56.sslip.io`）试 Let's Encrypt，但依赖公共服务可用性。
+- 换成 HTTPS 后：把 `VITE_API_BASE` 改成 `https://...`、`CORS_ORIGINS` 换成对应来源，移除上面两个 Android 明文开关，重新 build / 打包。
+
+### 常见问题补充
+
+| 现象 | 排查 |
+| --- | --- |
+| 服务器本机 curl 通、外网打不开 | 阿里云安全组放行 8080，再查系统防火墙 |
+| 浏览器能开、App 登录/同步失败 | 白名单缺 `https://localhost` / `capacitor://localhost`；或装的是旧 APK，未重打 |
+| App 提示网络错误、连不上 | `usesCleartextTraffic` 或 `allowMixedContent` 未生效；确认用的是本版 APK |
+| 换 IP 后所有端失效 | `VITE_API_BASE` 是构建期常量，IP 变了要重新 build + 重打 APK；这也是尽早换域名的原因 |
+
 ## 上线后建议
 
 - 用域名 + HTTPS（Caddy 或 nginx + certbot）把 8080 反代到 443；JWT 走明文 HTTP 有泄露风险
