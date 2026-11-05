@@ -1,4 +1,6 @@
-FROM node:22-alpine AS build
+ARG BUILDER_IMAGE=node:22-alpine
+ARG RUNTIME_IMAGE=nginx:alpine
+FROM ${BUILDER_IMAGE} AS build
 
 WORKDIR /app
 
@@ -16,7 +18,7 @@ ENV VITE_TIANDITU_TK=$VITE_TIANDITU_TK
 ENV VITE_TIANDITU_AUDIT_NO=$VITE_TIANDITU_AUDIT_NO
 RUN npm run build
 
-FROM nginx:alpine
+FROM ${RUNTIME_IMAGE}
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY app/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

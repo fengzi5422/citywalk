@@ -264,6 +264,73 @@ Android targetSdk 28+ 默认禁明文 HTTP，且 `https://localhost` 页面请�
 - 把 `app/src/data/places.json` 换成真实 POI 后重跑 `bash scripts/deploy.sh`
 - 单机 SQLite 不能起多个 `api` 副本共写；流量上来后需迁移 PostgreSQL
 
+## 镜像拉取失败（大陆 ECS 必看）
+
+`deploy.sh` 报：
+
+```
+failed to resolve source metadata for docker.io/library/node:22-alpine: not found
+```
+
+这是服务器拉不到 Docker Hub 基础镜像，**不是代码问题**。二选一解决。
+
+### 方案 A：配 Docker 镜像加速器（推荐，一次配置长期有效）
+
+先看现有配置——很多 ECS 镜像预置了已停用的加速器，这正是 `not found` 的常见原因：
+
+```bash
+docker info | grep -A5 "Registry Mirrors"
+cat /etc/docker/daemon.json 2>/dev/null
+```
+
+阿里云用户建议用**专属加速器**：控制台 → 容器镜像服务 ACR → 镜像工具 → 镜像加速器，复制形如 `https://xxxx.mirror.aliyuncs.com` 的地址。然后配置（**若 `daemon.json` 已有内容，把 `registry-mirrors` 合并进去，不要整文件覆盖**，否则可能丢掉已有设置导致 Docker 起不来）：
+
+```bash
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json >/dev/null <<'EOF'
+{
+  "registry-mirrors": [
+    "https://你的专属地址.mirror.aliyuncs.com",
+    "https://docker.m.daocloud.io",
+    "https://docker.1ms.run"
+  ]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+docker info | grep -A5 "Registry Mirrors"
+```
+
+没有专属地址时可只填公共源（可用性会变化，以实测为准）：`docker.m.daocloud.io`、`docker.1ms.run`、`docker.1panel.live`、`reg-mirror.qiniu.com`。
+
+先单独验证能拉取，再重新部署：
+
+```bash
+docker pull node:22-alpine && docker pull nginx:alpine
+bash scripts/deploy.sh
+```
+
+### 方案 B：只改 `.env` 覆盖基础镜像（不碰仓库文件）
+
+不方便改 Docker daemon 时，仓库已支持通过 `.env` 指定基础镜像。在 `.env` 末尾加三行（地址换成你实测可用的镜像代理）：
+
+```bash
+BASE_IMAGE=docker.m.daocloud.io/library/node:22-alpine
+BUILDER_IMAGE=docker.m.daocloud.io/library/node:22-alpine
+RUNTIME_IMAGE=docker.m.daocloud.io/library/nginx:alpine
+```
+
+重跑 `bash scripts/deploy.sh` 即可。Compose 把它们作为 build args 传给两个 Dockerfile 的 `FROM`；不设这三个变量时默认仍是官方 `node:22-alpine` / `nginx:alpine`，行为完全不变。
+
+> 这种方式**只改 `.env`**，而 `.env` 不在版本库里，后续 `git pull` 不会冲突。改完必须重跑 `deploy.sh`（会重新 build）。
+
+### 还不行
+
+- `docker pull hello-world` 判断是 Docker Hub 整体不可达还是单个镜像问题。
+- 检查 ECS 出公网能力：安全组**出方向**、VPC / NAT、代理环境变量。
+- 可从能访问 Docker Hub 的机器 `docker save node:22-alpine nginx:alpine | gzip > images.tar.gz`，上传服务器后 `docker load -i`，再本地构建。
+- Docker Hub 对匿名拉取有限流，偶发失败可稍后重试。
+
 ## 常见问题
 
 | 现象 | 排查 |
